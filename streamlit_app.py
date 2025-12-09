@@ -38,22 +38,40 @@ with tabs[0]:
         ["BVN", "CVERDEC1.LM", "CPACASC1.LM", "FERREYC1.LM"]
     )
 
+    # Intento de descarga
     data = yf.download(ticker, period="5y")
 
-    if data.empty:
-        st.error("No se encontraron datos para el ticker seleccionado.")
-    else:
-        st.success(f"Datos cargados correctamente: **{ticker}**")
+    # Validación corporativa: DataFrame vacío o sin columna Close
+    if data.empty or "Close" not in data.columns:
+        st.error(f"No se pudieron obtener datos válidos para el ticker **{ticker}**.")
+        st.info("""
+Posibles causas:
+- Yahoo Finance no provee datos históricos para este activo.
+- El ticker no existe o su formato cambió.
+- La API de Yahoo está limitando acceso temporalmente.
+        """)
 
-        fig = px.line(data, y="Close", title=f"Precio de Cierre - {ticker}")
-        st.plotly_chart(fig, use_container_width=True)
+        st.warning("""
+Sugerencia táctica:
+Use un ticker confiable como **BVN** (Buenaventura), que siempre entrega datos.
+        """)
+        st.stop()
 
-        st.subheader("Vista rápida del dataset")
-        st.dataframe(data.tail())
+    st.success(f"Datos cargados correctamente: **{ticker}**")
 
-        data["Return"] = data["Close"].pct_change()
-        fig_ret = px.line(data, y="Return", title="Retornos diarios")
-        st.plotly_chart(fig_ret, use_container_width=True)
+    # Gráfico de Close
+    fig = px.line(data, y="Close", title=f"Precio de Cierre - {ticker}")
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Vista rápida
+    st.subheader("Vista general del dataset")
+    st.dataframe(data.tail())
+
+    # Retornos
+    data["Return"] = data["Close"].pct_change()
+    fig_ret = px.line(data, y="Return", title="Retornos diarios")
+    st.plotly_chart(fig_ret, use_container_width=True)
+
 
 # ---------------------------------------------------------
 # TAB 2 – MODELADO
