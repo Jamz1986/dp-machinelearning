@@ -1,11 +1,22 @@
 import streamlit as st
-import pandas as pd
 
-st.title('🎈 Kallpa Securities')
+st.set_page_config(
+    page_title="MVP Machine Learning – JZ4",
+    page_icon="🧠",
+    layout="wide"
+)
 
-st.info('Este es un aplicativo LSTM')
+st.title("🧠 MVP – Sistema Predictivo de Machine Learning")
+st.markdown("""
+Este MVP integra las historias de usuario del proyecto, mostrando un flujo claro 
+entre visualización, análisis y predicción. Navega por las páginas en el panel izquierdo.
+""")
 
-with st.expander('Data'):
-   st.write('**Raw Data**')
-   df = pd.read_csv('https://raw.githubusercontent.com/dataprofessor/data/refs/heads/master/penguins_cleaned.csv')
-   df
+st.subheader("Componentes incluidos:")
+st.markdown("""
+- **📊 Visualización de Datos**  
+- **🧪 Módulo de Predicción**  
+- **🔗 Integración externa opcional (AWS RDS o APIs)**  
+""")
+
+st.info("Use el menú lateral para navegar por las páginas del MVP.")
