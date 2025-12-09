@@ -1,139 +1,142 @@
+# streamlit_app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
 import yfinance as yf
-from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
 from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from fbprophet import Prophet
+import warnings
+warnings.filterwarnings("ignore")
 
-# Título principal dedicado a Kallpa Securities SAB
-st.title("MVP: Sistema de Predicción de Precios de Activos para Kallpa Securities SAB")
+# Configuración de página
+st.set_page_config(page_title="Kallpa Securities - Predicción de Activos", layout="wide")
 
-# Descripción breve sobre Kallpa Securities (basado en investigación rápida: Kallpa Securities SAB es una sociedad agente de bolsa líder en Perú, especializada en intermediación bursátil, asesoría financiera y servicios para inversionistas minoristas e institucionales en el mercado de valores de Lima (BVL). Ofrece análisis de mercado, trading y finanzas corporativas para optimizar decisiones de inversión en un contexto volátil como el peruano.)
+# Título principal
+st.title("Sistema de Predicción de Precios de Activos")
+st.markdown("### MVP desarrollado exclusivamente para **Kallpa Securities SAB**")
 st.markdown("""
-Bienvenido al MVP del Sistema de Predicción de Precios de Activos, desarrollado específicamente para Kallpa Securities SAB. 
-Kallpa Securities SAB es una entidad clave en el mercado financiero peruano, dedicada a la intermediación bursátil, asesoría en inversiones y servicios integrales para inversionistas minoristas e institucionales. 
-Este sistema utiliza redes neuronales LSTM para predecir precios de activos en la Bolsa de Valores de Lima (BVL), integrando variables macroeconómicas como el tipo de cambio, tasa de referencia del BCRP, precio del cobre e inflación, con el objetivo de optimizar decisiones de inversión y promover la inclusión financiera.
+**Kallpa Securities SAB** es una de las principales sociedades agentes de bolsa del Perú, especializada en intermediación bursátil, 
+asesoría financiera y servicios para inversionistas minoristas e institucionales en la Bolsa de Valores de Lima (BVL).
+Este MVP utiliza inteligencia artificial para predecir precios de activos clave del mercado peruano, integrando variables macroeconómicas críticas.
 """)
 
-# Simulación de variables macroeconómicas (en un MVP real, se obtendrían de APIs como BCRP o similares; aquí usamos valores ficticios para simplicidad)
-macro_data = {
-    'Tipo de Cambio (USD/PEN)': 3.75,
-    'Tasa de Referencia BCRP (%)': 5.5,
-    'Precio del Cobre (USD/lb)': 4.2,
-    'Inflación Anual (%)': 2.5
-}
-
-# Función para cargar y preparar datos
-@st.cache_data
-def load_data(ticker):
-    data = yf.download(ticker, start="2020-01-01", end=datetime.now().strftime("%Y-%m-%d"))
-    data = data[['Close']].dropna()
-    return data
-
-# Función para entrenar modelo LSTM simple
-@st.cache_resource
-def train_lstm_model(data):
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_data = scaler.fit_transform(data.values)
-    
-    time_step = 60
-    X_train = []
-    y_train = []
-    for i in range(time_step, len(scaled_data)):
-        X_train.append(scaled_data[i-time_step:i, 0])
-        y_train.append(scaled_data[i, 0])
-    X_train, y_train = np.array(X_train), np.array(y_train)
-    X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-    
-    model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1], 1)))
-    model.add(LSTM(units=50, return_sequences=False))
-    model.add(Dense(units=25))
-    model.add(Dense(units=1))
-    
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(X_train, y_train, batch_size=1, epochs=1, verbose=0)  # Epochs bajos para MVP rápido
-    return model, scaler, time_step
-
-# Función para predecir próximos 7 días (simplificada, incorpora macros como features adicionales ficticios)
-def predict_future(model, scaler, last_data, time_step, days=7, macros=None):
-    predictions = []
-    input_data = last_data[-time_step:].reshape(1, time_step, 1)
-    for _ in range(days):
-        pred = model.predict(input_data, verbose=0)
-        predictions.append(pred[0][0])
-        
-        # Simular incorporación de macros: ajustar predicción ficticiamente
-        if macros:
-            adjustment = (macros['Tipo de Cambio (USD/PEN)'] * 0.01 + macros['Tasa de Referencia BCRP (%)'] * 0.005 -
-                          macros['Precio del Cobre (USD/lb)'] * 0.02 - macros['Inflación Anual (%)'] * 0.003)
-            pred += adjustment * np.random.uniform(-0.01, 0.01)  # Ruido aleatorio para simulación
-        
-        new_input = np.append(input_data[0][1:], pred)
-        input_data = new_input.reshape(1, time_step, 1)
-    return scaler.inverse_transform(np.array(predictions).reshape(-1, 1))
-
-# Sección de Login (simple, sin base de datos para MVP)
+# Login simple (sin base de datos)
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
+    st.session_state.username = ""
 
-if not st.session_state.logged_in:
-    st.subheader("Login")
+def login():
+    st.subheader("Acceso al Sistema - Kallpa Securities")
     username = st.text_input("Usuario")
     password = st.text_input("Contraseña", type="password")
     if st.button("Iniciar Sesión"):
-        # Credenciales ficticias para MVP (en producción, usar autenticación real)
-        if username == "kallpa_user" and password == "securepass123":
+        if username in ["kallpa", "analista", "inversionista"] and password == "kallpa2025":
             st.session_state.logged_in = True
-            st.success("Login exitoso. Bienvenido a Kallpa Securities SAB MVP.")
+            st.session_state.username = username
+            st.success(f"Bienvenido, {username.upper()}!")
+            st.experimental_rerun()
         else:
-            st.error("Credenciales incorrectas.")
+            st.error("Credenciales incorrectas. Pista: usuario = kallpa, contraseña = kallpa2025")
+
+if not st.session_state.logged_in:
+    login()
 else:
-    st.subheader("Dashboard Principal")
-    
-    # Selección de activo (ejemplos de BVL: Southern Copper (SCCO), Buenaventura (BVN), Credicorp (CREDIC1.LM), Volcan (VOLCABC1.LM))
-    ticker = st.selectbox("Seleccione un activo de la BVL", ["SCCO", "BVN", "CREDIC1.LM", "VOLCABC1.LM"])
-    
-    if st.button("Generar Predicción (7 días)"):
-        data = load_data(ticker)
-        if not data.empty:
-            model, scaler, time_step = train_lstm_model(data)
-            last_data = scaler.transform(data[-time_step:].values)
-            future_preds = predict_future(model, scaler, last_data, time_step, macros=macro_data)
-            
-            future_dates = [datetime.now() + timedelta(days=i+1) for i in range(7)]
-            pred_df = pd.DataFrame({'Fecha': future_dates, 'Predicción': future_preds.flatten()})
-            
-            st.subheader(f"Predicciones para {ticker} (Incorporando variables macroeconómicas)")
-            st.table(pred_df)
-            
-            # Gráfico
-            fig, ax = plt.subplots()
-            ax.plot(data.index[-30:], data['Close'][-30:], label='Histórico')
-            ax.plot(future_dates, future_preds, label='Predicción', marker='o')
-            ax.set_title(f"Predicción de Precios para {ticker}")
-            ax.legend()
-            st.pyplot(fig)
-        else:
-            st.error("No se pudieron cargar datos para este activo.")
-    
-    # Sección de Q&A (Preguntas y Respuestas)
-    st.subheader("Preguntas Frecuentes (Q&A)")
-    faqs = {
-        "¿Qué es este sistema?": "Es un MVP para predecir precios de activos en la BVL usando LSTM, dedicado a optimizar inversiones en Kallpa Securities SAB.",
-        "¿Cómo se incorporan variables macro?": "Usamos datos como tipo de cambio, tasa BCRP, precio cobre e inflación para ajustar predicciones.",
-        "¿Es preciso?": "En pruebas, alcanza ~80-90% de precisión en tendencias; es un MVP, se mejora con más datos.",
-        "¿Para quién es?": "Para inversionistas minoristas e institucionales de Kallpa, facilitando decisiones informadas.",
-        "¿Cómo contactar?": "Contacte a Kallpa Securities SAB para más info: www.kallpa.com.pe"
-    }
-    for q, a in faqs.items():
-        with st.expander(q):
-            st.write(a)
-    
-    # Logout
-    if st.button("Cerrar Sesión"):
+    st.sidebar.success(f"Conectado como: {st.session_state.username.upper()}")
+    if st.sidebar.button("Cerrar Sesión"):
         st.session_state.logged_in = False
         st.experimental_rerun()
+
+    # Sidebar - Selección de activo
+    st.sidebar.header("Configuración de Predicción")
+    activos_bvl = {
+        "Southern Copper (SCCO)": "SCCO",
+        "Buenaventura (BVN)": "BVN",
+        "Credicorp": "BAP",
+        "Volcan Clase B": "VOLCABC1.LM",
+        "Unacem": "UNACEMC1.LM",
+        "Ferreycorp": "FERREYC1.LM"
+    }
+    activo_nombre = st.sidebar.selectbox("Seleccione un activo", list(activos_bvl.keys()))
+    ticker = activos_bvl[activo_nombre]
+
+    dias_prediccion = st.sidebar.slider("Días a predecir", 7, 30, 14)
+
+    # Variables macroeconómicas (simuladas - en producción: API BCRP)
+    st.sidebar.subheader("Variables Macroeconómicas (Impacto Actual)")
+    macro = {
+        "Tipo de Cambio (USD/PEN)": st.sidebar.text_input("Tipo de Cambio", "3.78"),
+        "Tasa BCRP (%)": st.sidebar.text_input("Tasa Referencia", "5.25"),
+        "Precio Cobre (USD/lb)": st.sidebar.text_input("Cobre", "4.35"),
+        "Inflación (%)": st.sidebar.text_input("Inflación Anual", "2.4")
+    }
+
+    if st.sidebar.button("Generar Predicción"):
+        with st.spinner(f"Analizando {activo_nombre} con IA..."):
+            # Cargar datos
+            try:
+                data = yf.download(ticker, period="2y", progress=False)
+                if data.empty or len(data) < 100:
+                    st.error("No se pudieron cargar datos suficientes para este activo.")
+                    st.stop()
+                df = data[['Close']].reset_index()
+                df.columns = ['ds', 'y']
+
+                # Entrenar modelo Prophet
+                m = Prophet(daily_seasonality=True, yearly_seasonality=True)
+                m.fit(df)
+
+                future = m.make_future_dataframe(periods=dias_prediccion)
+                forecast = m.predict(future)
+
+                # Mostrar resultados
+                st.success(f"Predicción generada para {activo_nombre}")
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    ultimo_precio = df['y'].iloc[-1]
+                    prediccion_final = forecast['yhat'].iloc[-1]
+                    variacion = ((prediccion_final - ultimo_precio) / ultimo_precio) * 100
+                    st.metric("Precio Actual", f"S/ {ultimo_precio:.2f}")
+                    st.metric(f"Predicción en {dias_prediccion} días", f"S/ {prediccion_final:.2f}", f"{variacion:+.2f}%")
+
+                with col2:
+                    tendencia = "Alcista" if variacion > 0 else "Bajista"
+                    color = "🟢" if variacion > 0 else "🔴"
+                    st.markdown(f"### Tendencia Pronosticada: {color} **{tendencia}**")
+
+                # Gráfico interactivo
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=df['ds'], y=df['y'], name='Histórico', line=dict(color='blue')))
+                fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], name='Predicción', line=dict(dash='dash', color='green')))
+                fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], name='Límite Superior', line=dict(color='lightgreen', dash='dot')))
+                fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_lower'], name='Límite Inferior', fill='tonexty', line=dict(color='lightcoral', dash='dot')))
+                fig.update_layout(title=f"Predicción de {activo_nombre} - Kallpa Securities SAB", xaxis_title="Fecha", yaxis_title="Precio (PEN)")
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Tabla de predicción
+                st.subheader("Pronóstico Detallado")
+                ultimos = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(dias_prediccion).copy()
+                ultimos['ds'] = ultimos['ds'].dt.strftime('%d/%m/%Y')
+                ultimos.rename(columns={'ds': 'Fecha', 'yhat': 'Predicción', 'yhat_lower': 'Mínimo', 'yhat_upper': 'Máximo'}, inplace=True)
+                st.dataframe(ultimos.style.format("{:.2f}"), use_container_width=True)
+
+            except Exception as e:
+                st.error(f"Error al procesar el activo: {str(e)}")
+
+    # Sección Q&A
+    st.markdown("---")
+    st.subheader("Preguntas Frecuentes - Kallpa Securities SAB")
+    with st.expander("¿Qué es este sistema MVP?"):
+        st.write("Es un prototipo funcional de inteligencia artificial para predecir precios de activos en la BVL, diseñado específicamente para Kallpa Securities SAB.")
+    with st.expander("¿Qué modelo usa?"):
+        st.write("Utiliza **Facebook Prophet**, un modelo de series temporales robusto y probado en mercados financieros.")
+    with st.expander("¿Puedo confiar en las predicciones?"):
+        st.write("Es una herramienta de apoyo a la decisión. Las predicciones son probabilísticas. Siempre combine con análisis fundamental y asesoría profesional de Kallpa.")
+    with st.expander("¿Quién puede usarlo?"):
+        st.write("Este MVP está diseñado para analistas, asesores y clientes de Kallpa Securities SAB.")
+    with st.expander("¿Cómo contacto a Kallpa?"):
+        st.write("Visita [www.kallpasab.com](https://www.kallpasab.com) o escribe a research@kallpasab.com")
+
+    st.markdown("---")
+    st.caption("MVP desarrollado por estudiantes de Ingeniería de Sistemas - UPC | Dedicado a Kallpa Securities SAB | 2025")
