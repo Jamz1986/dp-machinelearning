@@ -1,5 +1,4 @@
 # streamlit_app.py
-
 # streamlit_app.py - MVP Final: Predicción de Activos para Kallpa Securities SAB
 # 100% Funcional en Streamlit Cloud SIN dependencias externas problemáticas
 # Usa solo: streamlit, pandas, numpy, yfinance, plotly (todas preinstaladas por default)
