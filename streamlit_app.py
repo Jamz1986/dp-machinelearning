@@ -1,4 +1,4 @@
-# streamlit_app.py - MVP FINAL PERUANIZADO con Multi-Page y Storytelling
+# streamlit_app.py - MVP FINAL con Dashboard Storytelling (Gráfico llamativo con velas y predicción)
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -9,224 +9,195 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-# Configuración general
-st.set_page_config(page_title="Kallpa Securities - Predicción BVL", layout="wide", initial_sidebar_state="expanded")
+# Configuración
+st.set_page_config(page_title="Kallpa Securities - Predicción IA", layout="wide")
+st.title("Sistema Predictivo Híbrido - Kallpa Securities SAB")
+st.markdown("### MVP Avanzado | Simulación LSTM + GRU + ARIMA")
 
-# Multi-page
-page = st.sidebar.radio("Navegación Kallpa", ["Dashboard Predictivo", "Información y Q&A"])
+# Login
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
 
-if page == "Dashboard Predictivo":
-    st.title("🧠 Dashboard Predictivo – Kallpa Securities SAB")
-    st.markdown("### Pronóstico Inteligente para la Bolsa de Valores de Lima | 2025 🇵🇪")
-
-    # Login
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-
-    if not st.session_state.logged_in:
-        st.subheader("🔐 Acceso Seguro – Research Kallpa")
-        col1, col2 = st.columns(2)
-        with col1:
-            user = st.text_input("Usuario", placeholder="kallpa")
-        with col2:
-            pwd = st.text_input("Contraseña", type="password", placeholder="••••••••")
-        if st.button("Ingresar", type="primary"):
-            if user == "kallpa" and pwd == "lstm2025":
-                st.session_state.logged_in = True
-                st.success("Acceso concedido. Bienvenido al módulo predictivo.")
-                st.rerun()
-            else:
-                st.error("Credenciales incorrectas.")
-    else:
-        st.sidebar.success("Sesión activa")
-        if st.sidebar.button("Cerrar sesión"):
-            st.session_state.logged_in = False
+if not st.session_state.logged_in:
+    col1, col2 = st.columns(2)
+    with col1:
+        user = st.text_input("Usuario")
+    with col2:
+        pwd = st.text_input("Contraseña", type="password")
+    if st.button("Ingresar"):
+        if user == "kallpa" and pwd == "lstm2025":
+            st.session_state.logged_in = True
+            st.success("Acceso concedido - Kallpa Securities SAB")
             st.rerun()
+        else:
+            st.error("Credenciales incorrectas")
+else:
+    st.sidebar.success("Sesión activa")
+    if st.sidebar.button("Cerrar sesión"):
+        st.session_state.logged_in = False
+        st.rerun()
 
-        st.sidebar.header("Configuración del Análisis")
-        activos = {
-            "Southern Copper (SCCO)": "SCCO",
-            "Buenaventura (BVN)": "BVN",
-            "Credicorp (BAP)": "BAP",
-            "Volcan Clase B": "VOLCABC1.LM"
-        }
-        activo = st.sidebar.selectbox("Selecciona el activo", list(activos.keys()))
-        symbol = activos[activo]
+    # Configuración
+    st.sidebar.header("Configuración")
+    activos = {
+        "Southern Copper (SCCO)": "SCCO",
+        "Buenaventura (BVN)": "BVN",
+        "Credicorp (BAP)": "BAP",
+        "Volcan B": "VOLCABC1.LM"
+    }
+    activo = st.sidebar.selectbox("Activo", list(activos.keys()))
+    symbol = activos[activo]
 
-        modo = st.sidebar.selectbox("Modelo Híbrido", [
-            "LSTM Simulado",
-            "LSTM + GRU Simulado",
-            "Ensemble Completo"
-        ])
+    modo = st.sidebar.selectbox("Modo de Fusión", [
+        "LSTM Simulado",
+        "LSTM + GRU Simulado",
+        "Ensemble Completo"
+    ])
 
-        # Variables macroeconómicas
-        st.sidebar.subheader("Variables Macroeconómicas (BCRP)")
-        tc = st.sidebar.slider("Tipo de Cambio USD/PEN", 3.5, 4.2, 3.78, 0.01)
-        tasa = st.sidebar.slider("Tasa BCRP (%)", 4.0, 8.0, 5.25, 0.25)
-        cobre = st.sidebar.slider("Precio del Cobre (USD/lb)", 3.5, 5.5, 4.35, 0.05)
+    # Variables macro
+    st.sidebar.subheader("Variables Macroeconómicas")
+    tc = st.sidebar.slider("Tipo Cambio", 3.5, 4.2, 3.78)
+    tasa = st.sidebar.slider("Tasa BCRP (%)", 4.0, 8.0, 5.25)
+    cobre = st.sidebar.slider("Cobre USD/lb", 3.5, 5.5, 4.35)
 
-        # ===============================
-        # GRÁFICO SPRINT 2 – ANÁLISIS EDA
-        # ===============================
+    if st.sidebar.button("Generar Predicción"):
+        with st.spinner("Generando predicción híbrida..."):
+            try:
+                # Cargar datos
+                data = yf.download(symbol, period="3y", progress=False)
+                if data.empty:
+                    st.error("No se encontraron datos")
+                    st.stop()
 
-        st.subheader("📊 Análisis Exploratorio – Comportamiento Histórico del Activo")
+                # Detectar columna de cierre automáticamente
+                close_col = None
+                for col in ['Close', 'CLOSE', 'Adj Close', 'close']:
+                    if col in data.columns:
+                        close_col = col
+                        break
+                if not close_col:
+                    st.error("No se encontró columna de precios")
+                    st.stop()
 
-        try:
-            data_hist = yf.download(symbol, period="1y", progress=False)
-            close_col_hist = next((col for col in ['Close', 'Adj Close'] if col in data_hist.columns), None)
-            precios_hist = data_hist[close_col_hist].dropna()
+                precios = data[close_col].dropna().values
+                fechas = data.index
 
-            ma20 = precios_hist.rolling(window=20).mean()
+                if len(precios) < 60:
+                    st.error("Datos insuficientes")
+                    st.stop()
 
-            fig_hist = go.Figure()
-            fig_hist.add_trace(go.Scatter(
-                x=precios_hist.index,
-                y=precios_hist,
-                name="Precio Cierre",
-                line=dict(width=2)
-            ))
-            fig_hist.add_trace(go.Scatter(
-                x=ma20.index,
-                y=ma20,
-                name="Media Móvil 20D",
-                line=dict(width=2, dash='dash')
-            ))
+                # Simulación de modelos
+                window = 60
+                ultimo_precio = float(precios[-1])  # Convertir a float normal
 
-            fig_hist.update_layout(
-                title=f"Comportamiento histórico – {activo}",
-                height=450,
-                template="simple_white"
-            )
+                # LSTM simulado
+                ventana = precios[-window:]
+                x = np.arange(window)
+                coeffs = np.polyfit(x, ventana, 3)
+                lstm_pred = float(np.polyval(coeffs, window))
 
-            st.plotly_chart(fig_hist, use_container_width=True)
+                # GRU simulado (EMA)
+                ema = ultimo_precio
+                for p in precios[-20:]:
+                    ema = 0.2 * float(p) + 0.8 * ema
+                gru_pred = ema
 
-        except Exception as e:
-            st.error(f"Error en el gráfico exploratorio: {str(e)}")
+                # ARIMA simulado
+                diff = np.diff(precios[-30:])
+                tendencia = np.mean(diff) if len(diff) > 0 else 0
+                arima_pred = ultimo_precio + tendencia * 2
 
-        # -----------------------------------
+                # Fusión
+                if modo == "Ensemble Completo":
+                    base = 0.6 * lstm_pred + 0.25 * gru_pred + 0.15 * arima_pred
+                elif modo == "LSTM + GRU Simulado":
+                    base = 0.7 * lstm_pred + 0.3 * gru_pred
+                else:
+                    base = lstm_pred
 
-        if st.sidebar.button("¡Generar Pronóstico!", type="primary"):
-            with st.spinner("Procesando con inteligencia híbrida..."):
-                try:
-                    data = yf.download(symbol, period="3y", progress=False)
-                    if data.empty:
-                        st.error("No hay datos disponibles.")
-                        st.stop()
+                # Impacto macro
+                macro_impact = (tc-3.78)*0.02 + (tasa-5.25)*(-0.015) + (cobre-4.35)*0.03
+                prediccion_final = base * (1 + macro_impact)
 
-                    close_col = next((col for col in ['Close', 'Adj Close'] if col in data.columns), None)
-                    precios = data[close_col].dropna()
-                    fechas = precios.index
-                    valores = precios.values.astype(float)
+                # Generar 14 días
+                futuro = []
+                actual = ultimo_precio
+                for i in range(14):
+                    paso = (prediccion_final - actual) / 14
+                    ruido = np.random.normal(0, 0.008)
+                    nuevo = actual + paso + ruido * actual
+                    futuro.append(float(nuevo))
+                    actual = nuevo
 
-                    if len(valores) < 60:
-                        st.error("Datos insuficientes.")
-                        st.stop()
+                # Resultados
+                st.success(f"Predicción generada: {modo}")
+                variacion = ((futuro[-1] - ultimo_precio) / ultimo_precio) * 100
 
-                    precio_actual = float(valores[-1])
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Precio Actual", f"S/ {ultimo_precio:.2f}")
+                col2.metric("Predicción 14d", f"S/ {futuro[-1]:.2f}")
+                col3.metric("Variación", f"{variacion:+.2f}%", delta=f"{variacion:+.2f}%")
 
-                    # === Modelos Simulados ===
-                    window = 60
-                    y_vent = valores[-window:]
-                    x = np.arange(window)
-                    coeffs = np.polyfit(x, y_vent, 3)
-                    lstm_pred = float(np.polyval(coeffs, window))
+                # === DASHBOARD STORYTELLING ===
+                st.markdown("### Resumen del Análisis")
+                st.markdown(f"**{activo} en la BVL:** Basado en datos históricos y ajustes macro, el modelo sugiere una tendencia { 'alcista' if variacion > 0 else 'bajista' } con impacto de {macro_impact:+.2f}% por variables como el cobre y la tasa BCRP.")
+                st.markdown("**Recomendación Kallpa:** Monitorea el mercado; combina con análisis fundamental.")
 
-                    ema = precio_actual
-                    for p in valores[-20:]:
-                        ema = 0.2 * p + 0.8 * ema
-                    gru_pred = ema
+                # Nuevo gráfico llamativo: Velas para histórico + Línea para predicción
+                st.markdown("### Gráfico Interactivo de Pronóstico")
+                fechas_hist = fechas[-90:]
+                data_hist = data[-90:]
 
-                    diff = np.diff(valores[-30:])
-                    tendencia = np.mean(diff) if len(diff) > 0 else 0
-                    arima_pred = precio_actual + tendencia * 2
+                fig = go.Figure()
 
-                    if modo == "Ensemble Completo":
-                        base = 0.6*lstm_pred + 0.25*gru_pred + 0.15*arima_pred
-                    elif modo == "LSTM + GRU Simulado":
-                        base = 0.7*lstm_pred + 0.3*gru_pred
-                    else:
-                        base = lstm_pred
+                # Velas para histórico (gráfico llamativo)
+                fig.add_trace(go.Candlestick(
+                    x=fechas_hist,
+                    open=data_hist['Open'],
+                    high=data_hist['High'],
+                    low=data_hist['Low'],
+                    close=data_hist['Close'],
+                    name="Histórico (Velas)",
+                    increasing_line_color='green', decreasing_line_color='red'
+                ))
 
-                    macro_impact = (tc-3.78)*0.02 + (tasa-5.25)*(-0.015) + (cobre-4.35)*0.03
-                    prediccion_final = base * (1 + macro_impact)
+                # Línea para predicción
+                fechas_futuras = [fechas[-1] + timedelta(days=i+1) for i in range(14)]
+                fig.add_trace(go.Scatter(
+                    x=fechas_futuras,
+                    y=futuro,
+                    mode='lines+markers',
+                    name="Predicción",
+                    line=dict(color="blue", width=3, dash="dash"),
+                    marker=dict(size=8, color="blue")
+                ))
 
-                    futuro = []
-                    actual = precio_actual
-                    for _ in range(14):
-                        paso = (prediccion_final - actual) / 14
-                        ruido = np.random.normal(0, 0.008)
-                        nuevo = actual + paso + ruido * actual
-                        futuro.append(float(nuevo))
-                        actual = nuevo
+                # Banda de confianza
+                sup = [p * 1.05 for p in futuro]
+                inf = [p * 0.95 for p in futuro]
+                fig.add_trace(go.Scatter(x=fechas_futuras, y=sup, line=dict(color='lightblue', width=1), fill=None, showlegend=False))
+                fig.add_trace(go.Scatter(x=fechas_futuras, y=inf, line=dict(color='lightblue', width=1), fill='tonexty', fillcolor='rgba(0, 0, 255, 0.1)', name="Confianza ±5%"))
 
-                    variacion = ((futuro[-1] - precio_actual) / precio_actual) * 100
+                fig.update_layout(
+                    title=f"Análisis y Pronóstico de {activo}",
+                    height=600,
+                    xaxis_title="Fecha",
+                    yaxis_title="Precio (S/)",
+                    template="plotly_dark",  # Modo oscuro para llamativo
+                    hovermode="x unified",
+                    xaxis_rangeslider_visible=True  # Slider interactivo
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
-                    st.success("Pronóstico generado.")
+                # Tabla CORREGIDA
+                df_futuro = pd.DataFrame({
+                    "Fecha": [f.strftime("%d/%m/%Y") for f in fechas_futuras],
+                    "Predicción (S/)": [f"{p:.2f}" for p in futuro],
+                    "Señal": ["COMPRA" if p > ultimo_precio*1.03 else "VENTA" if p < ultimo_precio*0.97 else "MANTENER" for p in futuro]
+                })
+                st.dataframe(df_futuro.style.highlight_max(axis=0, subset=['Predicción (S/)'], color='lightgreen'), use_container_width=True)
 
-                    if variacion > 3:
-                        st.balloons()
-                        st.markdown("**Escenario alcista.**")
-                    elif variacion < -3:
-                        st.markdown("**Riesgo a la baja detectado.**")
-                    else:
-                        st.markdown("**Movimiento lateral.**")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
 
-                    col1, col2, col3, col4 = st.columns(4)
-                    col1.metric("Precio Actual", f"S/ {precio_actual:.2f}")
-                    col2.metric("Predicción 14d", f"S/ {futuro[-1]:.2f}")
-                    col3.metric("Variación Esperada", f"{variacion:+.2f}%")
-                    
-
-                    # === Gráfico profesional del pronóstico ===
-                    fechas_fut = pd.date_range(start=fechas[-1] + timedelta(days=1), periods=14, freq='B')
-
-                    fig = go.Figure()
-                    fig.add_trace(go.Scatter(x=fechas[-90:], y=valores[-90:], name="Histórico", line=dict(width=3)))
-                    fig.add_trace(go.Scatter(x=fechas_fut, y=futuro, name="Pronóstico", line=dict(width=3)))
-
-                    fig.update_layout(
-                        title=f"{activo} – Predicción 14 días",
-                        height=550,
-                        template="simple_white"
-                    )
-
-                    st.plotly_chart(fig, use_container_width=True)
-
-                    # Tabla
-                    df = pd.DataFrame({
-                        "Fecha": [f.strftime("%d/%m") for f in fechas_fut],
-                        "Predicción": [f"S/ {p:.2f}" for p in futuro],
-                        "Señal": [
-                            "COMPRA 🇵🇪" if p > precio_actual*1.03
-                            else "VENTA ⚠️" if p < precio_actual*0.97
-                            else "MANTENER"
-                            for p in futuro
-                        ]
-                    })
-
-                    st.dataframe(df, use_container_width=True)
-                    st.info(f"Impacto macro estimado: {macro_impact:+.1%}")
-
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-
-elif page == "Información y Q&A":
-    st.title("ℹ️ Sobre el Sistema Predictivo – Kallpa Securities SAB")
-    st.markdown("### Información general del MVP desarrollado para la BVL🇵🇪")
-
-    st.subheader("Preguntas Frecuentes")
-    with st.expander("¿Qué tan confiable es el pronóstico?"):
-        st.write("El modelo híbrido muestra entre 87% y 91% de acierto direccional bajo backtesting.")
-
-    with st.expander("¿Es recomendación de inversión?"):
-        st.write("No constituye asesoría financiera. Es una herramienta de análisis académico.")
-
-    with st.expander("¿Cómo influyen las variables macroeconómicas?"):
-        st.write("""
-        - Cobre alto: impulsa mineras
-        - Tipo de cambio alto: favorece exportadoras
-        - Tasa BCRP alta: reduce apetito de riesgo
-        """)
-
-    st.markdown("---")
-    st.caption("Desarrollado para Kallpa Securities SAB | Bolsa de Valores de Lima | 2025")
+st.caption(" Kallpa Securities SAB | 2025")
