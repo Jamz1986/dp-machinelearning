@@ -175,7 +175,7 @@ if page == "Dashboard Predictivo":
                     col1.metric("Precio Actual", f"S/ {precio_actual:.2f}")
                     col2.metric("Predicción 14d", f"S/ {futuro[-1]:.2f}")
                     col3.metric("Variación Esperada", f"{variacion:+.2f}%")
-                    col4.metric("Confianza Kallpa", "89%")
+                    
 
                     # === Gráfico profesional del pronóstico ===
                     fechas_fut = pd.date_range(start=fechas[-1] + timedelta(days=1), periods=14, freq='B')
