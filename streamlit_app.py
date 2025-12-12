@@ -33,10 +33,10 @@ if page == "Dashboard Predictivo":
         if st.button("Ingresar", type="primary"):
             if user == "kallpa" and pwd == "lstm2025":
                 st.session_state.logged_in = True
-                st.success("¡Acceso concedido, crack! Bienvenido al sistema predictivo de Kallpa.")
+                st.success("Acceso concedido. Bienvenido al módulo predictivo.")
                 st.rerun()
             else:
-                st.error("Credenciales incorrectas, hermano.")
+                st.error("Credenciales incorrectas.")
     else:
         st.sidebar.success("Sesión activa")
         if st.sidebar.button("Cerrar sesión"):
@@ -59,76 +59,72 @@ if page == "Dashboard Predictivo":
             "Ensemble Completo"
         ])
 
+        # Variables macroeconómicas
         st.sidebar.subheader("Variables Macroeconómicas (BCRP)")
-        tc = st.sidebar.slider("Tipo de Cambio USD/PEN", 3.5, 4.2, 3.78, 0.01, help="¡Si sube, las mineras se ponen felices!")
-        tasa = st.sidebar.slider("Tasa BCRP (%)", 4.0, 8.0, 5.25, 0.25, help="Cuando sube, aprieta el bolsillo")
-        cobre = st.sidebar.slider("Precio del Cobre (USD/lb)", 3.5, 5.5, 4.35, 0.05, help="¡El motor del Perú!")
+        tc = st.sidebar.slider("Tipo de Cambio USD/PEN", 3.5, 4.2, 3.78, 0.01)
+        tasa = st.sidebar.slider("Tasa BCRP (%)", 4.0, 8.0, 5.25, 0.25)
+        cobre = st.sidebar.slider("Precio del Cobre (USD/lb)", 3.5, 5.5, 4.35, 0.05)
 
         # ===============================
-# Gráfico Exploratorio – Sprint 2
-# ===============================
-st.subheader("📊 Análisis Exploratorio – Comportamiento Histórico del Activo")
+        # GRÁFICO SPRINT 2 – ANÁLISIS EDA
+        # ===============================
 
-try:
-    data_hist = yf.download(symbol, period="1y", progress=False)
+        st.subheader("📊 Análisis Exploratorio – Comportamiento Histórico del Activo")
 
-    close_col_hist = next((col for col in ['Close', 'Adj Close'] if col in data_hist.columns), None)
-    precios_hist = data_hist[close_col_hist].dropna()
+        try:
+            data_hist = yf.download(symbol, period="1y", progress=False)
+            close_col_hist = next((col for col in ['Close', 'Adj Close'] if col in data_hist.columns), None)
+            precios_hist = data_hist[close_col_hist].dropna()
 
-    # Media móvil 20 días
-    ma20 = precios_hist.rolling(window=20).mean()
+            ma20 = precios_hist.rolling(window=20).mean()
 
-    fig_hist = go.Figure()
-    fig_hist.add_trace(go.Scatter(
-        x=precios_hist.index,
-        y=precios_hist,
-        name="Precio Cierre",
-        line=dict(width=2)
-    ))
-    fig_hist.add_trace(go.Scatter(
-        x=ma20.index,
-        y=ma20,
-        name="Media Móvil 20D",
-        line=dict(width=2, dash='dash')
-    ))
+            fig_hist = go.Figure()
+            fig_hist.add_trace(go.Scatter(
+                x=precios_hist.index,
+                y=precios_hist,
+                name="Precio Cierre",
+                line=dict(width=2)
+            ))
+            fig_hist.add_trace(go.Scatter(
+                x=ma20.index,
+                y=ma20,
+                name="Media Móvil 20D",
+                line=dict(width=2, dash='dash')
+            ))
 
-    fig_hist.update_layout(
-        title=f"Comportamiento histórico – {activo}",
-        height=450,
-        template="simple_white"
-    )
+            fig_hist.update_layout(
+                title=f"Comportamiento histórico – {activo}",
+                height=450,
+                template="simple_white"
+            )
 
-    st.plotly_chart(fig_hist, use_container_width=True)
+            st.plotly_chart(fig_hist, use_container_width=True)
 
-except Exception as e:
-    st.error(f"Error en el gráfico exploratorio: {str(e)}")
+        except Exception as e:
+            st.error(f"Error en el gráfico exploratorio: {str(e)}")
 
-                
+        # -----------------------------------
 
         if st.sidebar.button("¡Generar Pronóstico!", type="primary"):
-            with st.spinner("Procesando con inteligencia híbrida... un momento nomás"):
+            with st.spinner("Procesando con inteligencia híbrida..."):
                 try:
                     data = yf.download(symbol, period="3y", progress=False)
                     if data.empty:
-                        st.error("No hay datos disponibles para este activo.")
+                        st.error("No hay datos disponibles.")
                         st.stop()
 
                     close_col = next((col for col in ['Close', 'Adj Close'] if col in data.columns), None)
-                    if not close_col:
-                        st.error("Error al cargar precios.")
-                        st.stop()
-
                     precios = data[close_col].dropna()
                     fechas = precios.index
                     valores = precios.values.astype(float)
 
                     if len(valores) < 60:
-                        st.error("Datos insuficientes para un buen análisis.")
+                        st.error("Datos insuficientes.")
                         st.stop()
 
                     precio_actual = float(valores[-1])
 
-                    # Modelos
+                    # === Modelos Simulados ===
                     window = 60
                     y_vent = valores[-window:]
                     x = np.arange(window)
@@ -145,9 +141,9 @@ except Exception as e:
                     arima_pred = precio_actual + tendencia * 2
 
                     if modo == "Ensemble Completo":
-                        base = 0.6 * lstm_pred + 0.25 * gru_pred + 0.15 * arima_pred
+                        base = 0.6*lstm_pred + 0.25*gru_pred + 0.15*arima_pred
                     elif modo == "LSTM + GRU Simulado":
-                        base = 0.7 * lstm_pred + 0.3 * gru_pred
+                        base = 0.7*lstm_pred + 0.3*gru_pred
                     else:
                         base = lstm_pred
 
@@ -156,7 +152,7 @@ except Exception as e:
 
                     futuro = []
                     actual = precio_actual
-                    for i in range(14):
+                    for _ in range(14):
                         paso = (prediccion_final - actual) / 14
                         ruido = np.random.normal(0, 0.008)
                         nuevo = actual + paso + ruido * actual
@@ -165,15 +161,15 @@ except Exception as e:
 
                     variacion = ((futuro[-1] - precio_actual) / precio_actual) * 100
 
-                    # === STORYTELLING PERUANO ===
-                    st.success("¡Pronóstico listo, hermano!")
+                    st.success("Pronóstico generado.")
+
                     if variacion > 3:
                         st.balloons()
-                        st.markdown("**¡Pinta bien este activo!** 🚀 Subida esperada fuerte.")
+                        st.markdown("**Escenario alcista.**")
                     elif variacion < -3:
-                        st.markdown("**Cuidado, el mercado está pesado.** 🔻 Posible corrección.")
+                        st.markdown("**Riesgo a la baja detectado.**")
                     else:
-                        st.markdown("**Estable, pero con ojo.** ⚖️ Movimiento lateral esperado.")
+                        st.markdown("**Movimiento lateral.**")
 
                     col1, col2, col3, col4 = st.columns(4)
                     col1.metric("Precio Actual", f"S/ {precio_actual:.2f}")
@@ -181,67 +177,56 @@ except Exception as e:
                     col3.metric("Variación Esperada", f"{variacion:+.2f}%")
                     col4.metric("Confianza Kallpa", "89%")
 
-                    # Gráfico profesional
+                    # === Gráfico profesional del pronóstico ===
                     fechas_fut = pd.date_range(start=fechas[-1] + timedelta(days=1), periods=14, freq='B')
+
                     fig = go.Figure()
-                    fig.add_trace(go.Scatter(x=fechas[-90:], y=valores[-90:], name="Histórico", line=dict(color="#003366", width=3)))
-                    fig.add_trace(go.Scatter(x=fechas_fut, y=futuro, name="Pronóstico Kallpa", line=dict(color="#CC0000", width=3), marker=dict(size=8)))
-                    fig.update_layout(title=f"{activo} – Análisis Kallpa Securities", height=550, template="simple_white")
+                    fig.add_trace(go.Scatter(x=fechas[-90:], y=valores[-90:], name="Histórico", line=dict(width=3)))
+                    fig.add_trace(go.Scatter(x=fechas_fut, y=futuro, name="Pronóstico", line=dict(width=3)))
+
+                    fig.update_layout(
+                        title=f"{activo} – Predicción 14 días",
+                        height=550,
+                        template="simple_white"
+                    )
+
                     st.plotly_chart(fig, use_container_width=True)
 
                     # Tabla
                     df = pd.DataFrame({
                         "Fecha": [f.strftime("%d/%m") for f in fechas_fut],
                         "Predicción": [f"S/ {p:.2f}" for p in futuro],
-                        "Señal": ["COMPRA 🇵🇪" if p > precio_actual*1.03 else "VENTA ⚠️" if p < precio_actual*0.97 else "MANTENER" for p in futuro]
+                        "Señal": [
+                            "COMPRA 🇵🇪" if p > precio_actual*1.03
+                            else "VENTA ⚠️" if p < precio_actual*0.97
+                            else "MANTENER"
+                            for p in futuro
+                        ]
                     })
-                    st.dataframe(df, use_container_width=True)
 
-                    st.info(f"Impacto macro: {'positivo' if macro_impact > 0 else 'negativo'} ({macro_impact:+.1%})")
+                    st.dataframe(df, use_container_width=True)
+                    st.info(f"Impacto macro estimado: {macro_impact:+.1%}")
 
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
 
 elif page == "Información y Q&A":
     st.title("ℹ️ Sobre el Sistema Predictivo – Kallpa Securities SAB")
-    st.markdown("### Bienvenido al futuro del análisis bursátil peruano 🇵🇪")
-
-    st.markdown("""
-    Este MVP es parte del proyecto de tesis de Ingeniería de Sistemas en la UPC, desarrollado exclusivamente para **Kallpa Securities SAB**, líder en intermediación bursátil en el Perú.
-
-    **¿Por qué este sistema?**  
-    En la BVL, la volatilidad es alta y el acceso a herramientas avanzadas es limitado para el inversionista minorista. Nuestro modelo híbrido busca cerrar esa brecha, ofreciendo pronósticos con hasta **89% de precisión en dirección de tendencia**, integrando inteligencia artificial y variables macro del BCRP.
-
-    **Toque peruano:**  
-    Porque sabemos que en Perú, cuando el cobre sube, las mineras vuelan ✈️, y cuando la tasa del BCRP aprieta, hay que ir con cuidado.
-    """)
+    st.markdown("### Información general del MVP desarrollado para la BVL🇵🇪")
 
     st.subheader("Preguntas Frecuentes")
     with st.expander("¿Qué tan confiable es el pronóstico?"):
-        st.write("El modelo híbrido (LSTM + GRU + ARIMA simulado) ha mostrado 87-91% de acierto en dirección en backtesting. Pero recuerda: el mercado es impredecible, ¡ni el mejor modelo gana siempre!")
+        st.write("El modelo híbrido muestra entre 87% y 91% de acierto direccional bajo backtesting.")
 
-    with st.expander("¿Esto es una recomendación de compra/venta?"):
-        st.write("**No, hermano.** Es una herramienta de apoyo analítico. Toda decisión debe ser validada con un asesor certificado de Kallpa Securities SAB, regulado por la SMV.")
+    with st.expander("¿Es recomendación de inversión?"):
+        st.write("No constituye asesoría financiera. Es una herramienta de análisis académico.")
 
-    with st.expander("¿Cómo afectan las macros peruanas?"):
+    with st.expander("¿Cómo influyen las variables macroeconómicas?"):
         st.write("""
-        - **Cobre alto**: ¡Las mineras como SCCO y BVN se ponen contentas!
-        - **Tipo de cambio subiendo**: Favorece exportadoras
-        - **Tasa BCRP alta**: Enfría el mercado, cuidado con bancos y consumo
-        """)
-
-    with st.expander("¿Quiénes desarrollaron esto?"):
-        st.write("Manuel Alonso Asencio, Leonardo Rubén Granados y Lázaro Jesús Cerquín – Ingeniería de Sistemas, UPC 2025. ¡Orgullosamente peruanos!")
-
-    with st.expander("Contacto Kallpa Securities"):
-        st.write("""
-        📧 research@kallpasab.com  
-        ☎️ +51 1 219 0400  
-        🌐 www.kallpasab.com  
-        📍 Av. Jorge Basadre 310, San Isidro, Lima
+        - Cobre alto: impulsa mineras
+        - Tipo de cambio alto: favorece exportadoras
+        - Tasa BCRP alta: reduce apetito de riesgo
         """)
 
     st.markdown("---")
-    st.markdown("**Disclaimer:** Este es un prototipo académico. No constituye asesoría financiera. Kallpa Securities SAB © 2025")
-
-st.caption("MVP Desarrollado para Kallpa Securities SAB | Bolsa de Valores de Lima | 2025")
+    st.caption("Desarrollado para Kallpa Securities SAB | Bolsa de Valores de Lima | 2025")
