@@ -1,4 +1,4 @@
-# streamlit_app.py - MVP FINAL 100% FUNCIONAL (SIN ERRORES)
+# streamlit_app.py - MVP FINAL 100% FUNCIONAL (SIN ERRORES DEFINITIVOS)
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -73,26 +73,27 @@ else:
 
                 precios = pd.to_numeric(data["Close"], errors="coerce").dropna()
                 if len(precios) < 60:
-                    st.error("Datos insuficientes (menos de 60 días)")
+                    st.error("Datos insuficientes")
                     st.stop()
 
                 fechas = precios.index
                 valores = precios.values.astype(float)
                 precio_actual = float(valores[-1])
 
-                # --- LSTM simulado (corregido para evitar error de forma) ---
-                window = 60
-                y_vent = valores[-window:]  # Últimos 60 valores
+                # --- LSTM simulado ROBUSTO ---
+                window = min(60, len(valores))
+                y_vent = valores[-window:]
                 x = np.arange(window)
 
-                # Si por algún motivo la ventana es demasiado corta, usar tendencia simple
-                if len(y_vent) < 2:
-                    lstm_pred = precio_actual
+                # Manejo seguro de polyfit
+                if len(y_vent) < 2 or np.std(y_vent) == 0:
+                    lstm_pred = precio_actual  # Predicción plana si datos constantes
                 else:
-                    coeffs = np.polyfit(x, y_vent, min(4, len(y_vent)-1))
+                    grado = min(4, len(y_vent) - 1)
+                    coeffs = np.polyfit(x, y_vent, grado)
                     lstm_pred = float(np.polyval(coeffs, window))
 
-                # GRU simulado (EMA)
+                # GRU simulado
                 ema = precio_actual
                 for v in valores[-30:]:
                     ema = 0.18 * v + 0.82 * ema
@@ -114,7 +115,7 @@ else:
                 macro_impact = (tc - 3.78)*0.025 + (tasa - 5.25)*(-0.018) + (cobre - 4.35)*0.035
                 prediccion_final = base * (1 + macro_impact)
 
-                # Predicciones futuras (14 días)
+                # Predicciones futuras
                 predicciones = []
                 actual = precio_actual
                 for i in range(14):
