@@ -11,17 +11,9 @@ warnings.filterwarnings("ignore")
 # Configuración
 st.set_page_config(page_title="Kallpa Securities - Predicción IA", layout="wide")
 st.title("Sistema Predictivo Híbrido - Kallpa Securities SAB")
-st.markdown("### MVP Avanzado | Simulación LSTM + GRU + ARIMA")
+st.markdown("PI1")
 
-st.markdown("""
-**Modelo Híbrido Avanzado (compatible con entornos cloud)**  
-- **LSTM simulado**: Regresión polinómica con memoria de 60 días  
-- **GRU simulado**: Media móvil exponencial ponderada (EMA) para eficiencia  
-- **ARIMA simulado**: Tendencia lineal con autocorrelación  
-- **Fusión Ensemble**: 60% LSTM_sim + 25% GRU_sim + 15% ARIMA_sim  
-- **Macros BCRP integradas**: Tipo de cambio, tasa, cobre, inflación  
-**Precisión simulada: 87-91%**
-""")
+
 
 # Login
 if 'logged_in' not in st.session_state:
