@@ -6,3 +6,5 @@ scikit-learn
 plotly
 prophet
 fbprophet
+tensorflow==2.15.0
+
