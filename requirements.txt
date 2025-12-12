@@ -1,8 +1,8 @@
 streamlit
-yfinance
-pandas
 numpy
-scikit-learn
+pandas
+yfinance
 plotly
-prophet
-fbprophet
+scipy
+matplotlib
+pillow
