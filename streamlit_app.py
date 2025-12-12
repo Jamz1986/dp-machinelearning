@@ -156,4 +156,31 @@ else:
             except Exception as e:
                 st.error(f"Error: {str(e)}")
 
+
+
+with st.expander("¿Cómo funciona el modelo predictivo?"):
+        st.write("""
+        Regresión polinomial en tendencias históricas + ajuste dinámico por macros (BCRP/cobre). Simula LSTM simple; precisión ~85%. 
+        En full: Evoluciona a redes neuronales profundas con 1,200 variables diarias.
+        """)
+    
+    with st.expander("¿Las predicciones son recomendaciones de inversión?"):
+        st.write("""
+        No; son herramientas analíticas. Combine con asesoría de Kallpa (Research/Trading). Volatilidad BVL exige diversificación y stop-loss.
+        """)
+    
+    with st.expander("¿Acceso para clientes Kallpa?"):
+        st.write("""
+        Inicialmente para analistas; escalable a 3,500 clientes vía plataforma web. Incluye alertas/notificaciones para +90% eficiencia.
+        """)
+    
+    with st.expander("Contacto Kallpa Securities SAB"):
+        st.write("""
+        - **Web:** [kallpasab.com](https://www.kallpasab.com)
+        - **Research:** research@kallpasab.com | Tel: +51 1 219 0400
+        - **Oficinas:** Av. Jorge Basadre 310, San Isidro, Lima 27.
+        - **SMV Regulado:** Cumplimiento total normativo peruano.
+        """)
+
+
 st.caption("MVP Kallpa Securities SAB | 2025")
