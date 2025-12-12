@@ -64,6 +64,47 @@ if page == "Dashboard Predictivo":
         tasa = st.sidebar.slider("Tasa BCRP (%)", 4.0, 8.0, 5.25, 0.25, help="Cuando sube, aprieta el bolsillo")
         cobre = st.sidebar.slider("Precio del Cobre (USD/lb)", 3.5, 5.5, 4.35, 0.05, help="¡El motor del Perú!")
 
+        # ===============================
+# Gráfico Exploratorio – Sprint 2
+# ===============================
+st.subheader("📊 Análisis Exploratorio – Comportamiento Histórico del Activo")
+
+try:
+    data_hist = yf.download(symbol, period="1y", progress=False)
+
+    close_col_hist = next((col for col in ['Close', 'Adj Close'] if col in data_hist.columns), None)
+    precios_hist = data_hist[close_col_hist].dropna()
+
+    # Media móvil 20 días
+    ma20 = precios_hist.rolling(window=20).mean()
+
+    fig_hist = go.Figure()
+    fig_hist.add_trace(go.Scatter(
+        x=precios_hist.index,
+        y=precios_hist,
+        name="Precio Cierre",
+        line=dict(width=2)
+    ))
+    fig_hist.add_trace(go.Scatter(
+        x=ma20.index,
+        y=ma20,
+        name="Media Móvil 20D",
+        line=dict(width=2, dash='dash')
+    ))
+
+    fig_hist.update_layout(
+        title=f"Comportamiento histórico – {activo}",
+        height=450,
+        template="simple_white"
+    )
+
+    st.plotly_chart(fig_hist, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Error en el gráfico exploratorio: {str(e)}")
+
+                
+
         if st.sidebar.button("¡Generar Pronóstico!", type="primary"):
             with st.spinner("Procesando con inteligencia híbrida... un momento nomás"):
                 try:
