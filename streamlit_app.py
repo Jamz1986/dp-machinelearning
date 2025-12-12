@@ -1,4 +1,4 @@
-# streamlit_app.py - MVP FINAL 100% FUNCIONAL en Streamlit Cloud
+# streamlit_app.py - Versión FINAL CORREGIDA Y EXPLICADA
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -11,9 +11,7 @@ warnings.filterwarnings("ignore")
 # Configuración
 st.set_page_config(page_title="Kallpa Securities - Predicción IA", layout="wide")
 st.title("Sistema Predictivo Híbrido - Kallpa Securities SAB")
-st.markdown("PI1")
-
-
+st.markdown("### MVP Avanzado | Simulación LSTM + GRU + ARIMA")
 
 # Login
 if 'logged_in' not in st.session_state:
@@ -28,7 +26,7 @@ if not st.session_state.logged_in:
     if st.button("Ingresar"):
         if user == "kallpa" and pwd == "lstm2025":
             st.session_state.logged_in = True
-            st.success("Acceso concedido - Kallpa Securities SAB")
+            st.success("Acceso concedido")
             st.rerun()
         else:
             st.error("Credenciales incorrectas")
@@ -43,7 +41,8 @@ else:
     activos = {
         "Southern Copper (SCCO)": "SCCO",
         "Buenaventura (BVN)": "BVN",
-        "Credicorp (BAP)": "BAP"
+        "Credicorp (BAP)": "BAP",
+        "Volcan B": "VOLCABC1.LM"
     }
     activo = st.sidebar.selectbox("Activo", list(activos.keys()))
     symbol = activos[activo]
@@ -54,97 +53,113 @@ else:
         "Ensemble Completo"
     ])
 
-    # Macros
+    # Variables macro
     st.sidebar.subheader("Variables Macroeconómicas")
     tc = st.sidebar.slider("Tipo Cambio", 3.5, 4.2, 3.78)
     tasa = st.sidebar.slider("Tasa BCRP (%)", 4.0, 8.0, 5.25)
     cobre = st.sidebar.slider("Cobre USD/lb", 3.5, 5.5, 4.35)
-    inflacion = st.sidebar.slider("Inflación (%)", 1.5, 4.0, 2.4)
-
-    # Sprint 2: Integración y Capacitación
-    st.sidebar.header("Sprint 2: Funcionalidades")
-    if st.sidebar.button("Generar Reporte Personalizado"):
-        st.info("Reporte generado: Predicciones enviadas por email (simulado).")
-    if st.sidebar.button("Iniciar Capacitación"):
-        st.info("Sesión de capacitación iniciada: Tutorial interactivo para Research (simulado).")
 
     if st.sidebar.button("Generar Predicción"):
-        with st.spinner("Procesando con modelo híbrido..."):
+        with st.spinner("Cargando datos y generando predicción..."):
             try:
-                # Datos
+                # CORREGIDO: Ahora detecta automáticamente la columna de cierre
                 data = yf.download(symbol, period="3y", progress=False)
-                if len(data) < 100:
-                    st.error("Datos insuficientes")
+                
+                # Esto es lo que fallaba: ahora buscamos la columna correcta
+                close_col = None
+                for col in ['Close', 'CLOSE', 'Adj Close', 'close']:
+                    if col in data.columns:
+                        close_col = col
+                        break
+                
+                if close_col is None or data.empty:
+                    st.error("No se encontraron datos de precios para este activo.")
                     st.stop()
 
-                df = data['Close'].reset_index()
-                df['Date'] = pd.to_datetime(df['Date'])
-                precios = df['Close'].values
+                # Ahora sí: usamos la columna correcta
+                precios = data[close_col].dropna().values
+                fechas = data.index[-60:]  # Últimos 60 días
 
-                # Simulación LSTM (polinómica con memoria)
-                window = 60
-                lstm_sim = []
-                for i in range(window, len(precios)):
-                    x = np.arange(window)
-                    y = precios[i-window:i]
-                    poly_coeffs = np.polyfit(x, y, 2)
-                    lstm_sim.append(np.polyval(poly_coeffs, window))
-                lstm_mean = np.mean(lstm_sim[-14:] if len(lstm_sim) > 14 else lstm_sim) if lstm_sim else precios[-1]
+                if len(precios) < 60:
+                    st.error("Datos insuficientes (menos de 60 días)")
+                    st.stop()
 
-                # Simulación GRU (EMA)
-                alpha = 0.15
-                gru_sim = np.zeros(len(precios))
-                gru_sim[0] = precios[0]
-                for i in range(1, len(precios)):
-                    gru_sim[i] = alpha * precios[i] + (1 - alpha) * gru_sim[i-1]
-                gru_mean = np.mean(gru_sim[-14:] if len(gru_sim) > 14 else gru_sim) if gru_sim.size > 0 else precios[-1]
+                # === SIMULACIÓN DE MODELOS (como en tu tesis) ===
 
-                # Simulación ARIMA (tendencia lineal con autocorrelación)
-                arima_sim = precios.copy()
-                for i in range(1, len(arima_sim)):
-                    arima_sim[i] = 0.8 * arima_sim[i-1] + 0.2 * (precios[i] - precios[i-1])
-                arima_mean = np.mean(arima_sim[-14:] if len(arima_sim) > 14 else arima_sim) if arima_sim.size > 0 else precios[-1]
+                # 1. LSTM simulado: regresión polinómica con ventana de 60 días
+                def lstm_simulado(precios, ventana=60):
+                    ultimos = precios[-ventana:]
+                    x = np.arange(ventana)
+                    coeffs = np.polyfit(x, ultimos, 3)
+                    return np.polyval(coeffs, ventana)  # predicción del siguiente día
 
-                # Fusión Ensemble
+                lstm_pred = lstm_simulado(precios)
+
+                # 2. GRU simulado: EMA (más rápido que LSTM)
+                ema = precios[-1]
+                for p in precios[-30:]:
+                    ema = 0.2 * p + 0.8 * ema
+                gru_pred = ema
+
+                # 3. ARIMA simulado: tendencia + autocorrelación
+                diff = np.diff(precios[-30:])
+                arima_trend = np.mean(diff) if len(diff) > 0 else 0
+                arima_pred = precios[-1] + arima_trend * 1.5
+
+                # === FUSIÓN FINAL ===
                 if modo == "Ensemble Completo":
-                    base_pred = 0.6 * lstm_mean + 0.25 * gru_mean + 0.15 * arima_mean
+                    prediccion_base = 0.6 * lstm_pred + 0.25 * gru_pred + 0.15 * arima_pred
                 elif modo == "LSTM + GRU Simulado":
-                    base_pred = 0.7 * lstm_mean + 0.3 * gru_mean
+                    prediccion_base = 0.7 * lstm_pred + 0.3 * gru_pred
                 else:
-                    base_pred = lstm_mean
+                    prediccion_base = lstm_pred
 
-                # Predicción futura (14 días)
-                ultimo = precios[-1]
+                # Aplicar impacto macroeconómico (como en tu tesis)
+                macro_impact = (
+                    (tc - 3.78) * 0.02 +
+                    (tasa - 5.25) * (-0.015) +
+                    (cobre - 4.35) * 0.03
+                )
+                prediccion_final = prediccion_base * (1 + macro_impact)
+
+                # Generar 14 días de predicción
                 futuro = []
+                ultimo = precios[-1]
                 for i in range(14):
-                    pred = base_pred * (1 + np.random.normal(0, 0.005) * (i+1))
-                    macro_impact = (tc-3.78)*0.02 + (tasa-5.25)*(-0.015) + (cobre-4.35)*0.03 + (inflacion-2.4)*(-0.006)
-                    pred = pred * (1 + macro_impact)
-                    futuro.append(pred)
-                    ultimo = pred
+                    variacion_diaria = (prediccion_final - ultimo) / 14
+                    ruido = np.random.normal(0, 0.008)
+                    nuevo = ultimo + variacion_diaria * (i + 1) + ruido * ultimo
+                    futuro.append(nuevo)
 
-                # Resultados
-                st.success(f"Predicción generada: {modo}")
-                variacion = ((futuro[-1] - precios[-1]) / precios[-1]) * 100
+                # === RESULTADOS ===
+                st.success(f"Predicción generada con {modo}")
+                
+                variacion_total = ((futuro[-1] - precios[-1]) / precios[-1]) * 100
 
                 col1, col2, col3 = st.columns(3)
                 col1.metric("Precio Actual", f"S/ {precios[-1]:.2f}")
                 col2.metric("Predicción 14d", f"S/ {futuro[-1]:.2f}")
-                col3.metric("Variación", f"{variacion:+.2f}%")
+                col3.metric("Variación Esperada", f"{variacion_total:+.2f}%", 
+                          delta=f"{variacion_total:+.2f}%")
 
                 # Gráfico
-                fechas_fut = [df['Date'].iloc[-1] + timedelta(days=i+1) for i in range(14)]
+                fechas_futuras = [fechas[-1] + timedelta(days=i+1) for i in range(14)]
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=df['Date'].tail(60), y=precios[-60:], name="Histórico"))
-                fig.add_trace(go.Scatter(x=fechas_fut, y=futuro, name="Predicción Híbrida", line=dict(dash="dash")))
-                fig.update_layout(title=f"{activo} - Kallpa Securities SAB")
+                fig.add_trace(go.Scatter(x=fechas, y=precios[-60:], name="Histórico", line=dict(color="blue")))
+                fig.add_trace(go.Scatter(x=fechas_futuras, y=futuro, name="Predicción Híbrida", 
+                                       line=dict(color="green", dash="dash", width=3)))
+                fig.update_layout(title=f"{activo} - Kallpa Securities SAB", height=500)
                 st.plotly_chart(fig, use_container_width=True)
 
+                # Tabla
+                df_futuro = pd.DataFrame({
+                    "Fecha": [f.strftime("%d/%m") for f in fechas_futuras],
+                    "Predicción": [f"S/ {p:.2f}" for p in futuro],
+                    "Señal": ["COMPRA" if p > precios[-1]*1.03 else "VENTA" if p < precios[-1]*0.97 else "MANTENER" for p in futuro]
+                })
+                st.dataframe(df_futuro, use_container_width=True)
+
             except Exception as e:
-                st.error(f"Error: {e}")
+                st.error(f"Error: {str(e)}")
 
-# Q&A
-with st.expander("¿Cómo funciona la fusión híbrida?"):
-    st.write("Modelo híbrido combina simulación de redes neuronales con métodos estadísticos para robustez en mercados peruanos.")
-
-st.caption("MVP Kallpa Securities SAB 2025")
+st.caption("MVP Kallpa Securities SAB | 2025")
