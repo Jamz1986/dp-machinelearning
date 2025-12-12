@@ -4,3 +4,7 @@ numpy
 yfinance
 plotly
 statsmodels
+scikit-learn
+plotly
+prophet
+fbprophet
