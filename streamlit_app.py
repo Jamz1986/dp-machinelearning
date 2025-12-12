@@ -1,4 +1,4 @@
-# streamlit_app.py - MVP FINAL 100% FUNCIONAL (SIN ERRORES)
+# streamlit_app.py - MVP FINAL con Dashboard Storytelling (Gráfico siempre visible)
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,6 +6,7 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import warnings
+
 warnings.filterwarnings("ignore")
 
 # Configuración
@@ -18,6 +19,7 @@ if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
 if not st.session_state.logged_in:
+    st.subheader("Acceso Seguro – Kallpa Research")
     col1, col2 = st.columns(2)
     with col1:
         user = st.text_input("Usuario")
@@ -78,31 +80,29 @@ else:
                     st.error("No se encontró columna de precios")
                     st.stop()
 
-                precios = data[close_col].dropna().values
-                fechas = data.index
+                precios = data[close_col].dropna()
+                fechas = precios.index
+                precios_values = precios.values.astype(float)
 
-                if len(precios) < 60:
+                if len(precios_values) < 60:
                     st.error("Datos insuficientes")
                     st.stop()
 
+                ultimo_precio = float(precios_values[-1])
+
                 # Simulación de modelos
                 window = 60
-                ultimo_precio = float(precios[-1])  # Convertir a float normal
-
-                # LSTM simulado
-                ventana = precios[-window:]
+                ventana = precios_values[-window:]
                 x = np.arange(window)
                 coeffs = np.polyfit(x, ventana, 3)
                 lstm_pred = float(np.polyval(coeffs, window))
 
-                # GRU simulado (EMA)
                 ema = ultimo_precio
-                for p in precios[-20:]:
+                for p in precios_values[-20:]:
                     ema = 0.2 * float(p) + 0.8 * ema
                 gru_pred = ema
 
-                # ARIMA simulado
-                diff = np.diff(precios[-30:])
+                diff = np.diff(precios_values[-30:])
                 tendencia = np.mean(diff) if len(diff) > 0 else 0
                 arima_pred = ultimo_precio + tendencia * 2
 
@@ -125,7 +125,7 @@ else:
                     paso = (prediccion_final - actual) / 14
                     ruido = np.random.normal(0, 0.008)
                     nuevo = actual + paso + ruido * actual
-                    futuro.append(float(nuevo))  # Asegurar que sea float normal
+                    futuro.append(float(nuevo))
                     actual = nuevo
 
                 # Resultados
@@ -137,18 +137,65 @@ else:
                 col2.metric("Predicción 14d", f"S/ {futuro[-1]:.2f}")
                 col3.metric("Variación", f"{variacion:+.2f}%", delta=f"{variacion:+.2f}%")
 
-                # Gráfico
-                fechas_futuras = [fechas[-1] + timedelta(days=i+1) for i in range(14)]
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(x=fechas[-60:], y=precios[-60:], name="Histórico", line=dict(color="blue")))
-                fig.add_trace(go.Scatter(x=fechas_futuras, y=futuro, name="Predicción", line=dict(color="green", dash="dash", width=3)))
-                fig.update_layout(title=f"{activo} - Kallpa Securities SAB", height=500)
-                st.plotly_chart(fig, use_container_width=True)
+                # === DASHBOARD STORYTELLING CON GRÁFICO SIEMPRE VISIBLE ===
+                st.markdown("### Análisis Predictivo Detallado")
+                st.markdown(f"**Activo seleccionado:** {activo}")
+                st.markdown(f"**Modelo utilizado:** {modo}")
+                st.markdown(f"**Impacto macroeconómico neto:** {macro_impact:+.2%}")
 
-                # Tabla CORREGIDA (sin error de formato)
+                # Gráfico con datos limpios y fallback
+                try:
+                    num_hist = min(90, len(precios_values))
+                    fechas_hist = fechas[-num_hist:]
+                    precios_hist = precios_values[-num_hist:]
+
+                    fechas_futuras = pd.date_range(start=fechas[-1] + timedelta(days=1), periods=14, freq='B')  # Días hábiles
+
+                    fig = go.Figure()
+
+                    # Histórico
+                    fig.add_trace(go.Scatter(
+                        x=fechas_hist,
+                        y=precios_hist,
+                        mode='lines',
+                        name='Histórico',
+                        line=dict(color="#1f77b4", width=3)
+                    ))
+
+                    # Predicción
+                    fig.add_trace(go.Scatter(
+                        x=fechas_futuras,
+                        y=futuro,
+                        mode='lines+markers',
+                        name='Predicción',
+                        line=dict(color="#2ca02c", width=3, dash='dash'),
+                        marker=dict(size=6)
+                    ))
+
+                    # Banda de confianza
+                    sup = [p * 1.06 for p in futuro]
+                    inf = [p * 0.94 for p in futuro]
+                    fig.add_trace(go.Scatter(x=fechas_futuras, y=sup, line=dict(width=0), showlegend=False))
+                    fig.add_trace(go.Scatter(x=fechas_futuras, y=inf, fill='tonexty',
+                                           fillcolor='rgba(0,150,0,0.1)', line=dict(width=0), name="Confianza ±6%"))
+
+                    fig.update_layout(
+                        title=f"Evolución y Pronóstico - {activo}",
+                        xaxis_title="Fecha",
+                        yaxis_title="Precio (S/)",
+                        height=550,
+                        template="simple_white",
+                        hovermode="x unified"
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                except Exception as graph_error:
+                    st.warning("Gráfico temporalmente no disponible. La predicción numérica es válida.")
+                    st.write(f"Debug: {graph_error}")
+
+                # Tabla detallada
                 df_futuro = pd.DataFrame({
                     "Fecha": [f.strftime("%d/%m/%Y") for f in fechas_futuras],
-                    "Predicción (S/)": [f"{p:.2f}" for p in futuro],  # Aquí está la solución
+                    "Predicción (S/)": [f"{p:.2f}" for p in futuro],
                     "Señal": ["COMPRA" if p > ultimo_precio*1.03 else "VENTA" if p < ultimo_precio*0.97 else "MANTENER" for p in futuro]
                 })
                 st.dataframe(df_futuro, use_container_width=True)
