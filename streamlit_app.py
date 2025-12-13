@@ -234,10 +234,10 @@ if page == "Dashboard Predictivo":
 
 elif page == "Información y Q&A":
     st.title("Información y Q&A – Kallpa Securities SAB")
-    st.markdown("### ¡Bienvenido al mundo de la innovación financiera peruana, oe! 🇵🇪")
+    st.markdown("### ¡Bienvenido al mundo de la innovación financiera peruana ")
 
     st.markdown("""
-    Este MVP es parte del proyecto de tesis de Ingeniería de Sistemas en la UPC, desarrollado exclusivamente para **Kallpa Securities SAB**, líder en intermediación bursátil en el Perú.
+    Desarrollado exclusivamente para **Kallpa Securities SAB**, líder en intermediación bursátil en el Perú.
 
     **¿Por qué este sistema?**  
     En la BVL, la volatilidad es alta y el acceso a herramientas avanzadas es limitado para el inversionista minorista. Nuestro modelo híbrido busca cerrar esa brecha, ofreciendo pronósticos con hasta **89% de precisión en dirección de tendencia**, integrando inteligencia artificial y variables macro del BCRP.
