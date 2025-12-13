@@ -1,4 +1,5 @@
-# streamlit_app.py - MVP FINAL con Multi-Page, Storytelling Peruano y Elementos Adicionales
+# streamlit_app.py - MVP FINAL con Multi-Page, Storytelling Peruano y Gráfico Llamativo
+# CORREGIDO: Al iniciar sesión, se redirige directamente al Dashboard Predictivo
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -34,7 +35,7 @@ if page == "Dashboard Predictivo":
             if user == "kallpa" and pwd == "lstm2025":
                 st.session_state.logged_in = True
                 st.success("¡Acceso concedido, crack! Bienvenido al sistema predictivo de Kallpa.")
-                st.rerun()
+                st.rerun()  # Recarga la página → ahora entra al else y muestra el dashboard
             else:
                 st.error("Credenciales incorrectas, hermano.")
     else:
@@ -202,51 +203,21 @@ if page == "Dashboard Predictivo":
                     })
                     st.dataframe(df_futuro.style.highlight_max(axis=0, subset=['Predicción (S/)'], color='lightgreen'), use_container_width=True)
 
-                    # NUEVO ELEMENTO 1: Descarga de reporte en CSV
-                    csv = df_futuro.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        label="📥 Descargar Reporte en CSV",
-                        data=csv,
-                        file_name=f"pronostico_{activo.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.csv",
-                        mime="text/csv",
-                        help="Descarga el pronóstico completo para análisis offline"
-                    )
-
-                    # NUEVO ELEMENTO 2: Backtesting simple (precisión histórica simulada)
-                    st.markdown("### Backtesting Histórico (Últimos 30 días)")
-                    historico_real = precios[-44:-30]  # Precios reales de hace 14 días atrás
-                    prediccion_back = []
-                    precio_back = float(precios[-44])
-                    for i in range(14):
-                        paso_back = (lstm_pred - precio_back) / 14  # Simulación simple
-                        nuevo_back = precio_back + paso_back
-                        prediccion_back.append(nuevo_back)
-                        precio_back = nuevo_back
-
-                    aciertos_dir = sum(1 for i in range(1, 14) if np.sign(historico_real[i] - historico_real[i-1]) == np.sign(prediccion_back[i] - prediccion_back[i-1]))
-                    precision_dir = (aciertos_dir / 13) * 100 if len(historico_real) > 13 else 0
-
-                    st.metric("Precisión en Dirección (Backtesting 30 días)", f"{precision_dir:.1f}%")
-                    st.info("Indicador de confiabilidad histórica del modelo en este activo.")
-
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
 
 elif page == "Información y Q&A":
     st.title("Información y Q&A – Kallpa Securities SAB")
-    st.markdown("### ¡Bienvenido al mundo de la innovación financiera peruana, oe! 🇵🇪")
+    st.markdown("### ¡Bienvenido al mundo de la innovación financiera peruana! 🇵🇪")
 
     st.markdown("""
-    Este MVP es parte del proyecto de tesis de Ingeniería de Sistemas en la UPC, desarrollado exclusivamente para **Kallpa Securities SAB**, líder en intermediación bursátil en el Perú.
+    Este MVP forma parte de un proyecto académico desarrollado para **Kallpa Securities SAB**, líder en intermediación bursátil en el Perú.
 
-    **¿Por qué este sistema?**  
-    En la BVL, la volatilidad es alta y el acceso a herramientas avanzadas es limitado para el inversionista minorista. Nuestro modelo híbrido busca cerrar esa brecha, ofreciendo pronósticos con hasta **89% de precisión en dirección de tendencia**, integrando inteligencia artificial y variables macro del BCRP.
-
-    **Toque peruano:**  
-    Porque sabemos que en Perú, cuando el cobre sube, las mineras vuelan ✈️, y cuando la tasa del BCRP aprieta, hay que ir con cuidado.
+    **Objetivo del sistema:**  
+    Democratizar el acceso a herramientas predictivas avanzadas para inversionistas minoristas en la BVL, reduciendo brechas de información y optimizando decisiones de inversión mediante inteligencia artificial.
     """)
 
-    st.subheader("Preguntas Frecuentes")
+    st.subheader("Preguntas Frecuentes Técnicas")
     with st.expander("¿Qué arquitectura utiliza el modelo predictivo?"):
         st.write("""
         Modelo híbrido que simula:
@@ -260,7 +231,7 @@ elif page == "Información y Q&A":
         st.write("""
         Se aplica un ajuste multiplicativo final basado en desviaciones de valores neutrales:
         - Fórmula: impacto = (tipo_cambio - 3.78)*0.02 + (tasa_BCRP - 5.25)*(-0.015) + (cobre - 4.35)*0.03
-        - Simula el efecto de más de 1,200 variables diarias (como en la tesis).
+        - Simula el efecto de más de 1,200 variables diarias.
         - Ejemplo: Cobre alto impulsa mineras; tasa alta enfría valoración bancaria.
         """)
 
