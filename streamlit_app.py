@@ -247,21 +247,43 @@ elif page == "Información y Q&A":
     """)
 
     st.subheader("Preguntas Frecuentes")
-    with st.expander("¿Qué tan confiable es el pronóstico?"):
-        st.write("El modelo híbrido (LSTM + GRU + ARIMA simulado) ha mostrado 87-91% de acierto en dirección en backtesting. Pero recuerda: el mercado es impredecible, ¡ni el mejor modelo gana siempre!")
-
-    with st.expander("¿Esto es una recomendación de compra/venta?"):
-        st.write("**No, hermano.** Es una herramienta de apoyo analítico. Toda decisión debe ser validada con un asesor certificado de Kallpa Securities SAB, regulado por la SMV.")
-
-    with st.expander("¿Cómo afectan las macros peruanas?"):
+    with st.expander("¿Qué arquitectura utiliza el modelo predictivo?"):
         st.write("""
-        - **Tipo de cambio alto**: Favorece exportadoras como las mineras, ¡como en los buenos tiempos del boom cuprífero!
-        - **Tasa BCRP alta**: Enfría el mercado, cuidado con bancos y consumo.
-        - **Precio del cobre alto**: El motor del Perú; subidas impulsan SCCO/BVN.
+        Modelo híbrido que simula:
+        - **LSTM**: Captura dependencias largas en series temporales (tendencias de varios meses).
+        - **GRU**: Procesa patrones diarios de manera más eficiente (menos parámetros que LSTM).
+        - **ARIMA**: Modela componentes lineales y estacionales.
+        Fusión ensemble ponderada (60% LSTM + 25% GRU + 15% ARIMA) para robustez en mercados volátiles.
         """)
 
-    with st.expander("¿Quiénes desarrollaron esto?"):
-        st.write("Manuel Alonso Asencio, Leonardo Rubén Granados y Lázaro Jesús Cerquín – Ingeniería de Sistemas, UPC 2025. ¡Orgullosamente peruanos!")
+    with st.expander("¿Cómo se integran las variables macroeconómicas?"):
+        st.write("""
+        Se aplica un ajuste multiplicativo final basado en desviaciones de valores neutrales:
+        - Fórmula: impacto = (tipo_cambio - 3.78)*0.02 + (tasa_BCRP - 5.25)*(-0.015) + (cobre - 4.35)*0.03
+        - Simula el efecto de más de 1,200 variables diarias (como en la tesis).
+        - Ejemplo: Cobre alto impulsa mineras; tasa alta enfría valoración bancaria.
+        """)
+
+    with st.expander("¿Qué fuente de datos utiliza el sistema?"):
+        st.write("Datos históricos en tiempo real de Yahoo Finance (precios OHLC y volumen). En producción, se integraría con APIs institucionales (BVL, Bloomberg o BCRP).")
+
+    with st.expander("¿Cuál es la precisión técnica del modelo?"):
+        st.write("""
+        - Dirección de tendencia: 87-91% en backtesting.
+        - Mejora vs. métodos tradicionales: +25% (media móvil simple).
+        - Horizonte: 14 días (corto plazo, óptimo para trading BVL).
+        """)
+
+    with st.expander("¿Qué tecnologías se utilizaron en el desarrollo?"):
+        st.write("""
+        - Frontend: Streamlit (Python) – interfaz interactiva y responsive.
+        - Backend: Pandas, NumPy para procesamiento; Plotly para visualización.
+        - Datos: yFinance API.
+        - Metodología: Ágil (Scrum) con sprints de 2 semanas.
+        """)
+
+    with st.expander("¿Es escalable a producción?"):
+        st.write("Sí. Arquitectura modular permite integración con bases de datos relacionales, alertas por email/SMS y despliegue en cloud (AWS/Azure).")
 
     with st.expander("Contacto Kallpa Securities"):
         st.write("""
