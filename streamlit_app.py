@@ -9,17 +9,17 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-# Configuración general
+
 st.set_page_config(page_title="Kallpa Securities - Dashboard BVL", layout="wide", initial_sidebar_state="expanded")
 
-# Multi-page navigation
+
 page = st.sidebar.radio("Navegación Kallpa", ["Dashboard Predictivo", "Información y Q&A"])
 
 if page == "Dashboard Predictivo":
     st.title("🧠 Dashboard Predictivo – Kallpa Securities SAB")
     st.markdown("### Pronóstico Inteligente para la Bolsa de Valores de Lima | 2025 🇵🇪")
 
-    # Login
+  
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
 
@@ -59,7 +59,7 @@ if page == "Dashboard Predictivo":
             "Ensemble Completo"
         ])
 
-        # Variables macro
+       
         st.sidebar.subheader("Variables Macroeconómicas")
         tc = st.sidebar.slider("Tipo Cambio", 3.5, 4.2, 3.78)
         tasa = st.sidebar.slider("Tasa BCRP (%)", 4.0, 8.0, 5.25)
@@ -68,13 +68,13 @@ if page == "Dashboard Predictivo":
         if st.sidebar.button("Generar Predicción"):
             with st.spinner("Generando predicción híbrida..."):
                 try:
-                    # Cargar datos
+                    
                     data = yf.download(symbol, period="3y", progress=False)
                     if data.empty:
                         st.error("No se encontraron datos")
                         st.stop()
 
-                    # Detectar columna de cierre automáticamente
+                   
                     close_col = None
                     for col in ['Close', 'CLOSE', 'Adj Close', 'close']:
                         if col in data.columns:
@@ -93,9 +93,9 @@ if page == "Dashboard Predictivo":
 
                     # Simulación de modelos
                     window = 60
-                    ultimo_precio = float(precios[-1])  # Convertir a float normal
+                    ultimo_precio = float(precios[-1]) 
 
-                    # LSTM simulado
+                    
                     ventana = precios[-window:]
                     x = np.arange(window)
                     coeffs = np.polyfit(x, ventana, 3)
@@ -120,7 +120,7 @@ if page == "Dashboard Predictivo":
                     else:
                         base = lstm_pred
 
-                    # Impacto macro
+                   
                     macro_impact = (tc-3.78)*0.02 + (tasa-5.25)*(-0.015) + (cobre-4.35)*0.03
                     prediccion_final = base * (1 + macro_impact)
 
