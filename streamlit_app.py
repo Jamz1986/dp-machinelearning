@@ -1,4 +1,4 @@
-# streamlit_app.py - MVP FINAL FUNCIONAL
+# streamlit_app.py - MVP FINAL CORREGIDO (Sin error polyfit)
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore")
 
 st.set_page_config(page_title="Kallpa Securities - Dashboard BVL", layout="wide", initial_sidebar_state="expanded")
 
-# Multi-page navigation
+# Multi-page
 page = st.sidebar.radio("Navegación Kallpa", ["Dashboard Predictivo", "Información y Q&A"])
 
 if page == "Dashboard Predictivo":
@@ -32,10 +32,10 @@ if page == "Dashboard Predictivo":
         if st.button("Ingresar", type="primary"):
             if user == "kallpa" and pwd == "lstm2025":
                 st.session_state.logged_in = True
-                st.success("¡Acceso concedido, crack! Bienvenido al sistema predictivo de Kallpa.")
+                st.success("¡Acceso concedido! Bienvenido a Kallpa Analytics.")
                 st.rerun()
             else:
-                st.error("Credenciales incorrectas, hermano.")
+                st.error("Credenciales incorrectas.")
     else:
         st.sidebar.success("Sesión activa")
         if st.sidebar.button("Cerrar sesión"):
@@ -63,8 +63,8 @@ if page == "Dashboard Predictivo":
         tasa = st.sidebar.slider("Tasa BCRP (%)", 4.0, 8.0, 5.25)
         cobre = st.sidebar.slider("Cobre USD/lb", 3.5, 5.5, 4.35)
 
-        if st.sidebar.button("Generar Predicción"):
-            with st.spinner("Generando predicción híbrida..."):
+        if st.sidebar.button("Generar Predicción", type="primary"):
+            with st.spinner("Generando predicción..."):
                 try:
                     data = yf.download(symbol, period="3y", progress=False)
                     if data.empty:
@@ -78,19 +78,19 @@ if page == "Dashboard Predictivo":
 
                     precios = pd.to_numeric(data[close_col], errors="coerce").dropna()
                     if len(precios) < 30:
-                        st.error("Datos insuficientes")
+                        st.error("Datos insuficientes para el análisis")
                         st.stop()
 
                     fechas = precios.index
                     valores = precios.values.astype(float)
                     precio_actual = float(valores[-1])
 
-                    # === LSTM SIMULADO - CORREGIDO PARA EVITAR ERROR ===
+                    # === LSTM SIMULADO - CORREGIDO ===
                     window = min(60, len(valores))
                     y_vent = valores[-window:]
                     x = np.arange(window)
 
-                    if len(y_vent) < 2 or np.std(y_vent) == 0:
+                    if len(y_vent) < 2 or np.all(y_vent == y_vent[0]):
                         lstm_pred = precio_actual
                     else:
                         grado = min(3, len(y_vent) - 1)
@@ -132,21 +132,17 @@ if page == "Dashboard Predictivo":
 
                     variacion = ((futuro[-1] - precio_actual) / precio_actual) * 100
 
-                    # Resultados
                     st.success(f"Predicción generada: {modo}")
                     col1, col2, col3 = st.columns(3)
                     col1.metric("Precio Actual", f"S/ {precio_actual:.2f}")
                     col2.metric("Predicción 14d", f"S/ {futuro[-1]:.2f}")
                     col3.metric("Variación", f"{variacion:+.2f}%", delta=f"{variacion:+.2f}%")
 
-                    # Gráfico llamativo
-                    st.markdown("### Gráfico Interactivo de Pronóstico")
+                    # Gráfico
                     fechas_futuras = [fechas[-1] + timedelta(days=i+1) for i in range(14)]
                     fig = go.Figure()
                     fig.add_trace(go.Scatter(x=fechas[-90:], y=valores[-90:], name="Histórico", line=dict(color="#1f77b4", width=3)))
                     fig.add_trace(go.Scatter(x=fechas_futuras, y=futuro, name="Predicción", line=dict(color="#d62728", width=3), marker=dict(size=6)))
-                    fig.add_trace(go.Scatter(x=fechas_futuras, y=[p*1.07 for p in futuro], line=dict(width=0), showlegend=False))
-                    fig.add_trace(go.Scatter(x=fechas_futuras, y=[p*0.93 for p in futuro], fill='tonexty', fillcolor='rgba(214,39,40,0.15)', line=dict(width=0), name="Confianza ±7%"))
                     fig.update_layout(title=f"{activo} – Kallpa Securities SAB", height=550, template="plotly_white")
                     st.plotly_chart(fig, use_container_width=True)
 
@@ -166,7 +162,7 @@ elif page == "Información y Q&A":
     st.markdown("### ¡Bienvenido al mundo de la innovación financiera peruana! 🇵🇪")
 
     st.markdown("""
-    Este MVP forma parte del proyecto de tesis de Ingeniería de Sistemas en la UPC, desarrollado exclusivamente para **Kallpa Securities SAB**, líder en intermediación bursátil en el Perú.
+    Este MVP forma parte del proyecto de tesis de Ingeniería de Sistemas en la UPC, desarrollado exclusivamente para **Kallpa Securities SAB**.
     """)
 
     st.subheader("Preguntas Frecuentes")
