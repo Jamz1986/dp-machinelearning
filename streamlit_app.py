@@ -27,9 +27,9 @@ if page == "Dashboard Predictivo":
         st.subheader("🔐 Acceso Seguro – Research Kallpa")
         col1, col2 = st.columns(2)
         with col1:
-            user = st.text_input("Usuario", placeholder="kallpa")
+            user = st.text_input("Usuario", placeholder="Ingrese usuario")
         with col2:
-            pwd = st.text_input("Contraseña", type="password", placeholder="••••••••")
+            pwd = st.text_input("Contraseña", type="password", placeholder="Ingrese contraseña")
         if st.button("Ingresar", type="primary"):
             if user == "kallpa" and pwd == "lstm2025":
                 st.session_state.logged_in = True
