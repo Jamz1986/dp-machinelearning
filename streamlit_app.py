@@ -709,5 +709,5 @@ elif "Ayuda" in page:
             📧 research@kallpasab.com &nbsp;|&nbsp; ☎ +51 1 219-0400<br>
             📍 Av. Jorge Basadre 310, San Isidro, Lima &nbsp;|&nbsp; 🌐 www.kallpasab.com
         </p>
-        <p style="color:#334155;font-size:0.72rem;margin-top:0.6rem;">Las predicciones son orientativas y no constituyen asesoría financiera. © 2025</p>
-    </div>""", unsafe_allow_html=True)icciones son orientativas y no constituyen asesoría financiera.")
+         <p style="color:#334155;font-size:0.72rem;margin-top:0.6rem;">Las predicciones son orientativas y no constituyen asesoría financiera. © 2025</p>
+    </div>""", unsafe_allow_html=True)
