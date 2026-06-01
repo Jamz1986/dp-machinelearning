@@ -15,6 +15,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# ─────────────────────────────────────────────────────────────
+# CSS — fixes de overflow + UI completa
+# ─────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
@@ -440,7 +444,7 @@ with st.sidebar:
 
     page = st.radio(
         "Navegación",
-        ["🏠  Dashboard", "👤  Mi Cuenta", "📬  Alertas", "❓  Ayuda"],
+        ["🏠  Dashboard", "👤  Mi Cuenta", "📬  Alertas", "❓  Ayuda", "📋  Encuesta"],
         label_visibility="collapsed"
     )
 
@@ -1119,4 +1123,3 @@ elif "Ayuda" in page:
             Las predicciones son orientativas y no constituyen asesoría financiera. © 2025
         </p>
     </div>""", unsafe_allow_html=True)
-    
