@@ -1123,3 +1123,348 @@ elif "Ayuda" in page:
             Las predicciones son orientativas y no constituyen asesoría financiera. © 2025
         </p>
     </div>""", unsafe_allow_html=True)
+
+# ═════════════════════════════════════════════════════════════
+# ENCUESTA DE VALIDACIÓN
+# ═════════════════════════════════════════════════════════════
+elif "Encuesta" in page:
+    st.markdown("""
+    <div class="page-header">
+        <div class="brand" style="margin-bottom:0.3rem;">Validación del Sistema</div>
+        <h1>Encuesta de Experiencia de Usuario</h1>
+        <p>Estudio de validación · Kallpa Securities SAB · Solo con fines de investigación académica</p>
+    </div>""", unsafe_allow_html=True)
+
+    # Inicializar respuestas y estado en session_state
+    if "enc_enviada" not in st.session_state:
+        st.session_state.enc_enviada = False
+    if "enc_respuestas" not in st.session_state:
+        st.session_state.enc_respuestas = []
+
+    # Si ya envió, mostrar reporte
+    if st.session_state.enc_enviada:
+        st.success("✅ ¡Gracias! Tu respuesta fue registrada correctamente.")
+        if st.button("📝 Completar otra vez (modo prueba)", use_container_width=False):
+            st.session_state.enc_enviada = False
+            st.rerun()
+
+    if not st.session_state.enc_enviada:
+
+        st.markdown("""
+        <div class="kcard-accent" style="margin-bottom:1.2rem;">
+            <span class="brand">Instrucciones</span>
+            <p style="color:#94A3B8;font-size:0.85rem;margin:0.4rem 0 0;">
+                Esta encuesta tiene <b style="color:#F1F5F9">9 preguntas</b> y toma menos de <b style="color:#F1F5F9">3 minutos</b>.
+                Es anónima y sus respuestas serán usadas exclusivamente para la investigación académica
+                sobre democratización financiera en el Perú. No hay respuestas correctas ni incorrectas.
+            </p>
+        </div>""", unsafe_allow_html=True)
+
+        # ── SECCIÓN I ─────────────────────────────────────────────
+        st.markdown("""
+        <div style="background:#0F1629;border-left:4px solid #2563EB;border-radius:0 8px 8px 0;
+                    padding:0.8rem 1.2rem;margin-bottom:1rem;">
+            <div style="color:#60A5FA;font-size:0.7rem;font-weight:700;
+                        letter-spacing:0.1em;text-transform:uppercase;">Sección I</div>
+            <div style="color:#F1F5F9;font-weight:600;font-size:0.95rem;">
+                Perfil y Adaptación Tecnológica
+            </div>
+            <div style="color:#64748B;font-size:0.78rem;margin-top:0.2rem;">
+                Objetivo: Validar la transición desde métodos informales hacia la IA.
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+        st.markdown('<div class="kcard">', unsafe_allow_html=True)
+        st.markdown("**1.** Antes de utilizar esta plataforma, ¿cuál era su principal fuente de información para invertir?")
+        p1 = st.radio("p1", [
+            "Redes sociales o grupos de mensajería (información informal)",
+            "Análisis técnico propio (gráficos y manuales)",
+            "Recomendaciones de amigos o familiares",
+            "Ninguna, invertía por intuición",
+        ], label_visibility="collapsed", key="enc_p1")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="kcard">', unsafe_allow_html=True)
+        st.markdown("**2.** ¿Qué tan fácil le resultó navegar por el dashboard y comprender las predicciones?")
+        p2_labels = {
+            1: "1 — Muy difícil",
+            2: "2 — Difícil",
+            3: "3 — Neutral",
+            4: "4 — Fácil",
+            5: "5 — Muy fácil",
+        }
+        p2 = st.select_slider(
+            "p2",
+            options=[1, 2, 3, 4, 5],
+            format_func=lambda x: p2_labels[x],
+            value=3,
+            label_visibility="collapsed",
+            key="enc_p2"
+        )
+        # Barra visual de la escala
+        color_p2 = ["#EF4444","#F97316","#F59E0B","#84CC16","#10B981"][p2-1]
+        st.markdown(f"""
+        <div style="background:#0A0E1A;border-radius:6px;padding:0.5rem 0.8rem;margin-top:0.3rem;">
+            <span style="color:{color_p2};font-weight:700;font-size:0.9rem;">{p2_labels[p2]}</span>
+        </div>""", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # ── SECCIÓN II ────────────────────────────────────────────
+        st.markdown("""
+        <div style="background:#0F1629;border-left:4px solid #8B5CF6;border-radius:0 8px 8px 0;
+                    padding:0.8rem 1.2rem;margin-bottom:1rem;margin-top:0.5rem;">
+            <div style="color:#A78BFA;font-size:0.7rem;font-weight:700;
+                        letter-spacing:0.1em;text-transform:uppercase;">Sección II</div>
+            <div style="color:#F1F5F9;font-weight:600;font-size:0.95rem;">
+                IA Explicable y Educación Financiera
+            </div>
+            <div style="color:#64748B;font-size:0.78rem;margin-top:0.2rem;">
+                Objetivo: Cumplir con la Ley N.º 32814 sobre transparencia algorítmica.
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+        st.markdown('<div class="kcard">', unsafe_allow_html=True)
+        st.markdown('**3.** ¿La sección de "Factores de Influencia" (ej. precio del cobre, inflación) le ayudó a entender por qué el sistema generó esa predicción?')
+        p3 = st.radio("p3", [
+            "Sí, me ayudó a comprender la lógica del mercado",
+            "Solo parcialmente, algunos términos son complejos",
+            "No, prefiero ver solo el precio proyectado",
+        ], label_visibility="collapsed", key="enc_p3")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="kcard">', unsafe_allow_html=True)
+        st.markdown("**4.** ¿Considera que el uso de esta herramienta ha mejorado su conocimiento sobre la Bolsa de Valores de Lima (BVL)?")
+        p4 = st.radio("p4", [
+            "Totalmente de acuerdo",
+            "De acuerdo",
+            "Neutral",
+            "En desacuerdo",
+        ], label_visibility="collapsed", key="enc_p4")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # ── SECCIÓN III ───────────────────────────────────────────
+        st.markdown("""
+        <div style="background:#0F1629;border-left:4px solid #10B981;border-radius:0 8px 8px 0;
+                    padding:0.8rem 1.2rem;margin-bottom:1rem;margin-top:0.5rem;">
+            <div style="color:#6EE7B7;font-size:0.7rem;font-weight:700;
+                        letter-spacing:0.1em;text-transform:uppercase;">Sección III</div>
+            <div style="color:#F1F5F9;font-weight:600;font-size:0.95rem;">
+                Soporte a la Decisión e Impacto Económico
+            </div>
+            <div style="color:#64748B;font-size:0.78rem;margin-top:0.2rem;">
+                Objetivo: Validar la eficacia del sistema en la reducción de riesgos.
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+        st.markdown('<div class="kcard">', unsafe_allow_html=True)
+        st.markdown("**5.** Al observar un activo con un Ratio de Sharpe mayor a 1, ¿cuál es su percepción de riesgo?")
+        p5 = st.radio("p5", [
+            "Siento mucha confianza, es un activo óptimo",
+            "Siento confianza moderada",
+            "Me es indiferente",
+            "No entiendo el significado del ratio",
+        ], label_visibility="collapsed", key="enc_p5")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="kcard">', unsafe_allow_html=True)
+        st.markdown('**6.** ¿Qué tanta seguridad le brinda el "Intervalo de Confianza del 95%" mostrado en los gráficos?')
+        p6 = st.radio("p6", [
+            "Mucha seguridad; reduce mi temor a la volatilidad",
+            "Seguridad moderada",
+            "Poca seguridad",
+            "No influye en mi decisión",
+        ], label_visibility="collapsed", key="enc_p6")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="kcard">', unsafe_allow_html=True)
+        st.markdown("**7.** ¿Ha cambiado o cancelado una intención de inversión basándose en una alerta o ranking de la plataforma?")
+        p7 = st.radio("p7", [
+            "Sí, varias veces",
+            "Sí, en alguna ocasión",
+            "No, sigo mi plan original",
+        ], label_visibility="collapsed", key="enc_p7")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # ── SECCIÓN IV ────────────────────────────────────────────
+        st.markdown("""
+        <div style="background:#0F1629;border-left:4px solid #F59E0B;border-radius:0 8px 8px 0;
+                    padding:0.8rem 1.2rem;margin-bottom:1rem;margin-top:0.5rem;">
+            <div style="color:#FCD34D;font-size:0.7rem;font-weight:700;
+                        letter-spacing:0.1em;text-transform:uppercase;">Sección IV</div>
+            <div style="color:#F1F5F9;font-weight:600;font-size:0.95rem;">
+                Percepción de Valor y Democratización
+            </div>
+            <div style="color:#64748B;font-size:0.78rem;margin-top:0.2rem;">
+                Objetivo: Sustentar la viabilidad económica y social del proyecto.
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+        st.markdown('<div class="kcard">', unsafe_allow_html=True)
+        st.markdown("**8.** ¿Considera que esta herramienta reduce la ventaja que tienen los inversionistas institucionales (grandes bancos) sobre los minoristas?")
+        p8 = st.radio("p8", [
+            "Sí, democratiza el acceso a tecnología avanzada",
+            "Sí, pero aún falta información",
+            "No, la brecha sigue siendo la misma",
+        ], label_visibility="collapsed", key="enc_p8")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="kcard">', unsafe_allow_html=True)
+        st.markdown("**9.** ¿Estaría dispuesto a utilizar esta plataforma como su herramienta principal de consulta diaria para la BVL?")
+        p9 = st.radio("p9", [
+            "Definitivamente sí",
+            "Probablemente sí",
+            "Tal vez",
+            "No",
+        ], label_visibility="collapsed", key="enc_p9")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # ── Botón de envío ─────────────────────────────────────────
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("✅ Enviar respuestas", use_container_width=True, type="primary"):
+            respuesta = {
+                "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                "usuario":   st.session_state.usuario_actual or "Anónimo",
+                "p1": p1, "p2": p2, "p3": p3, "p4": p4, "p5": p5,
+                "p6": p6, "p7": p7, "p8": p8, "p9": p9,
+            }
+            st.session_state.enc_respuestas.append(respuesta)
+            st.session_state.enc_enviada = True
+            st.rerun()
+
+    # ── REPORTE AGREGADO ──────────────────────────────────────────
+    n_resp = len(st.session_state.enc_respuestas)
+    if n_resp > 0:
+        st.markdown('<hr class="kdivider">', unsafe_allow_html=True)
+        st.markdown(f"## 📊 Reporte de Validación · {n_resp} respuesta{'s' if n_resp > 1 else ''}")
+        st.markdown(f'<p style="color:#64748B;font-size:0.82rem;">Datos acumulados en esta sesión de prueba. '
+                    f'En el estudio real se conectaría a una base de datos persistente.</p>',
+                    unsafe_allow_html=True)
+
+        df_resp = pd.DataFrame(st.session_state.enc_respuestas)
+
+        # ── Métricas rápidas ──────────────────────────────────────
+        avg_usab = df_resp["p2"].mean()
+        pct_democratiza = (df_resp["p8"].str.startswith("Sí")).mean() * 100
+        pct_usaria = (df_resp["p9"].isin(["Definitivamente sí","Probablemente sí"])).mean() * 100
+        pct_comprende = (df_resp["p3"] == "Sí, me ayudó a comprender la lógica del mercado").mean() * 100
+
+        m1, m2, m3, m4 = st.columns(4)
+        for col, lbl, val, color in [
+            (m1, "Usabilidad promedio", f"{avg_usab:.1f} / 5",   "#2563EB"),
+            (m2, "Percibe democratización", f"{pct_democratiza:.0f}%", "#10B981"),
+            (m3, "Adoptaría la plataforma", f"{pct_usaria:.0f}%", "#8B5CF6"),
+            (m4, "IA explicable útil", f"{pct_comprende:.0f}%",  "#F59E0B"),
+        ]:
+            with col:
+                st.markdown(
+                    f'<div class="metric-box"><div class="lbl">{lbl}</div>'
+                    f'<div class="val" style="color:{color}">{val}</div></div>',
+                    unsafe_allow_html=True
+                )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        tab_r1, tab_r2, tab_r3, tab_r4 = st.tabs([
+            "Sección I · Perfil",
+            "Sección II · IA Explicable",
+            "Sección III · Decisión",
+            "Sección IV · Democratización",
+        ])
+
+        def bar_chart(series, title, color="#2563EB"):
+            counts = series.value_counts()
+            fig = go.Figure(go.Bar(
+                x=counts.values,
+                y=counts.index,
+                orientation="h",
+                marker_color=color,
+                text=counts.values,
+                textposition="outside",
+                textfont=dict(size=11, color="#94A3B8"),
+            ))
+            fig.update_layout(
+                title=dict(text=title, font=dict(size=13, color="#E2E8F0")),
+                height=max(200, len(counts) * 56),
+                **plot_layout(),
+                xaxis=dict(showgrid=True, gridcolor="#1E2D4A", color="#334155"),
+                yaxis=dict(showgrid=False, color="#94A3B8", tickfont=dict(size=11)),
+                margin=dict(l=0, r=40, t=40, b=0),
+            )
+            return fig
+
+        with tab_r1:
+            c1r, c2r = st.columns(2)
+            with c1r:
+                st.plotly_chart(bar_chart(df_resp["p1"],
+                    "P1 · Fuente de información previa", "#2563EB"),
+                    use_container_width=True)
+            with c2r:
+                # Histograma de usabilidad
+                counts_p2 = df_resp["p2"].value_counts().sort_index()
+                labels_p2 = [p2_labels[i] for i in counts_p2.index]
+                colors_p2 = ["#EF4444","#F97316","#F59E0B","#84CC16","#10B981"]
+                fig_p2 = go.Figure(go.Bar(
+                    x=labels_p2, y=counts_p2.values,
+                    marker_color=[colors_p2[i-1] for i in counts_p2.index],
+                    text=counts_p2.values, textposition="outside",
+                    textfont=dict(size=11, color="#94A3B8"),
+                ))
+                fig_p2.update_layout(
+                    title=dict(text="P2 · Facilidad de uso", font=dict(size=13, color="#E2E8F0")),
+                    height=280, **plot_layout(),
+                    xaxis=dict(showgrid=False, color="#334155", tickfont=dict(size=10)),
+                    yaxis=dict(showgrid=True, gridcolor="#1E2D4A", color="#334155"),
+                    margin=dict(l=0, r=0, t=40, b=0),
+                )
+                st.plotly_chart(fig_p2, use_container_width=True)
+
+        with tab_r2:
+            c1r, c2r = st.columns(2)
+            with c1r:
+                st.plotly_chart(bar_chart(df_resp["p3"],
+                    "P3 · IA explicable (factores de influencia)", "#8B5CF6"),
+                    use_container_width=True)
+            with c2r:
+                st.plotly_chart(bar_chart(df_resp["p4"],
+                    "P4 · Mejora del conocimiento financiero", "#8B5CF6"),
+                    use_container_width=True)
+
+        with tab_r3:
+            c1r, c2r, c3r = st.columns(3)
+            with c1r:
+                st.plotly_chart(bar_chart(df_resp["p5"],
+                    "P5 · Ratio de Sharpe", "#10B981"),
+                    use_container_width=True)
+            with c2r:
+                st.plotly_chart(bar_chart(df_resp["p6"],
+                    "P6 · Intervalo de confianza", "#10B981"),
+                    use_container_width=True)
+            with c3r:
+                st.plotly_chart(bar_chart(df_resp["p7"],
+                    "P7 · Cambio de decisión de inversión", "#10B981"),
+                    use_container_width=True)
+
+        with tab_r4:
+            c1r, c2r = st.columns(2)
+            with c1r:
+                st.plotly_chart(bar_chart(df_resp["p8"],
+                    "P8 · Percepción de democratización", "#F59E0B"),
+                    use_container_width=True)
+            with c2r:
+                st.plotly_chart(bar_chart(df_resp["p9"],
+                    "P9 · Adopción como herramienta principal", "#F59E0B"),
+                    use_container_width=True)
+
+        # ── Exportar datos crudos ─────────────────────────────────
+        st.markdown('<hr class="kdivider">', unsafe_allow_html=True)
+        csv_enc = df_resp.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "⬇ Descargar datos de la encuesta (CSV)",
+            csv_enc,
+            f"encuesta_kallpa_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            "text/csv",
+        )
+        st.markdown(
+            '<p style="color:#334155;font-size:0.72rem;">Los datos exportados pueden usarse '
+            'directamente en SPSS, Excel o Python para el análisis estadístico del paper.</p>',
+            unsafe_allow_html=True
+        )
