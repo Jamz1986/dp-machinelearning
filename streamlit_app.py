@@ -444,7 +444,8 @@ with st.sidebar:
 
     page = st.radio(
         "Navegación",
-        ["🏠  Dashboard", "👤  Mi Cuenta", "📬  Alertas", "❓  Ayuda", "📋  Encuesta"],
+        ["🏠  Dashboard", "👤  Mi Cuenta", "📬  Alertas", "❓  Ayuda",
+         "📋  Encuesta", "🔍  Explorar BVL", "📈  Evolución"],
         label_visibility="collapsed"
     )
 
