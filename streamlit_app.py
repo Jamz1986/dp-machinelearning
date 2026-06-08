@@ -1732,12 +1732,13 @@ elif "Evolución" in page:
                     pass
 
                 y_label = "Precio normalizado (base 100)" if normalizar else "Precio (USD)"
+                layout_comp = plot_layout()
+                layout_comp["yaxis"]["title"] = y_label
                 fig_comp.update_layout(
                     height=520,
                     title=dict(text=f"Comparación: {' vs '.join([TODOS_ACTIVOS[a] for a in activos_comp])} · {periodo_comp} + Predicción 14d",
                                font=dict(size=13, color="#E2E8F0")),
-                    **plot_layout(),
-                    yaxis=dict(showgrid=True, gridcolor="#1E2D4A", color="#334155", title=y_label),
+                    **layout_comp,
                 )
                 st.plotly_chart(fig_comp, use_container_width=True)
 
